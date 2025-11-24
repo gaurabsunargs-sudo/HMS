@@ -1,0 +1,448 @@
+@import 'tailwindcss';
+
+@config '../tailwind.config.js';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility faded-bottom {
+  @apply after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:hidden after:h-32 after:w-full after:bg-[linear-gradient(180deg,_transparent_10%,_hsl(var(--background))_70%)] md:after:block;
+}
+
+@layer base {
+  :root {
+    --background: 220 80% 99.7%;
+    --foreground: 220 15% 10%;
+    --muted: 235 80% 97%;
+    --muted-foreground: 220 10% 40%;
+    --popover: 220 80% 98%;
+    --popover-foreground: 220 15% 10%;
+    --card: 220 80% 98%;
+    --card-foreground: 220 15% 10%;
+    --border: 220 10% 85%;
+    --input: 220 10% 85%;
+    --primary: 260 90% 55%;
+    --primary-foreground: 230 20% 98%;
+    --secondary: 200 40% 85%;
+    --secondary-foreground: 200 25% 40%;
+    --accent: 260, 15%, 90%;
+    --accent-foreground: 20 48% 12%;
+    --destructive: 10 80% 55%;
+    --destructive-foreground: 10 100% 90%;
+    --ring: 260, 15%, 90%;
+    --radius: 0.5rem;
+    --chart-1: 200 75% 55%;
+    --chart-2: 340 65% 60%;
+    --chart-3: 50 85% 65%;
+    --chart-4: 120 75% 55%;
+    --chart-5: 30 85% 70%;
+
+    --sidebar-background: 220 50% 15%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 215 45% 35%;
+    --sidebar-primary-foreground: 220 50% 15%;
+    --sidebar-accent: 215 40% 30%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 50% 45%;
+    --sidebar-ring: 215 50% 45%;
+  }
+
+  .dark {
+    --background: 230 25% 12%;
+    --foreground: 230 20% 95%;
+    --muted: 230 10% 25%;
+    --muted-foreground: 230 15% 70%;
+    --popover: 230 25% 12%;
+    --popover-foreground: 230 20% 95%;
+    --card: 230 25% 15%;
+    --card-foreground: 230 20% 98%;
+    --border: 230 15% 35%;
+    --input: 230 15% 35%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 230 20% 98%;
+    --secondary: 210 20% 25%;
+    --secondary-foreground: 210 20% 85%;
+    --accent: 253 13% 24%;
+    --accent-foreground: 230 20% 98%;
+    --destructive: 0 85% 55%;
+    --destructive-foreground: 0 100% 95%;
+    --ring: 253 13% 24%;
+    --chart-1: 210 70% 60%;
+    --chart-2: 340 70% 55%;
+    --chart-3: 50 85% 65%;
+    --chart-4: 120 75% 55%;
+    --chart-5: 30 85% 70%;
+
+    --sidebar-background: 220 40% 8%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 215 40% 25%;
+    --sidebar-primary-foreground: 220 40% 8%;
+    --sidebar-accent: 215 35% 20%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 215 45% 38%;
+    --sidebar-ring: 215 45% 38%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  html {
+    @apply overflow-x-hidden;
+  }
+  body {
+    @apply bg-background text-foreground min-h-svh w-full;
+  }
+}
+
+.react-calendar {
+  font-family: inherit;
+  @apply bg-background text-foreground border-none;
+  background-color: var(--card) !important;
+  border: var(--border) !important;
+}
+
+.react-calendar * {
+  font-family: inherit;
+}
+
+.react-calendar__navigation {
+  @apply border-border mb-2 flex items-center border-b pb-2;
+}
+.react-calendar__month-view__days__day:hover {
+  background-color: hsl(var(--secondary)) !important;
+}
+.react-calendar__navigation__arrow:hover,
+.react-calendar__navigation__label:hover {
+  background-color: hsl(var(--secondary)) !important;
+}
+.react-calendar__month-view__days__day:hover {
+  background-color: hsl(var(--secondary)) !important;
+}
+.react-calendar__tile:hover .react-calendar__month-view__days__day:hover {
+  background-color: hsl(var(--secondary)) !important;
+}
+.react-calendar button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: hsl(var(--secondary)) !important;
+}
+.react-calendar__navigation button {
+  @apply text-foreground hover:bg-accent min-w-[44px] rounded-md bg-transparent p-2 font-sans;
+}
+
+.react-calendar__navigation__label {
+  @apply font-sans text-sm font-medium;
+}
+
+.react-calendar {
+  @apply border-none bg-transparent;
+}
+
+.react-calendar__navigation {
+  @apply mb-2 flex items-center gap-1;
+}
+
+.react-calendar__navigation button {
+  @apply text-foreground hover:bg-accent hover:text-accent-foreground h-9 w-9 rounded-md bg-transparent p-0 text-sm;
+}
+
+.react-calendar__navigation button:disabled,
+.react-calendar__navigation__arrow:disabled {
+  background-color: transparent !important;
+  opacity: 0.5 !important;
+
+  @apply bg-transparent opacity-50 hover:bg-transparent;
+}
+.react-calendar__tile--now {
+  background: hsl(var(--secondary)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+.react-calendar__tile--now abbr {
+  color: hsl(var(--foreground)) !important;
+}
+
+.react-calendar__navigation__label {
+  @apply text-foreground hover:bg-accent hover:text-accent-foreground pointer-events-auto flex-1 text-sm font-medium;
+  @apply rounded-md px-2 py-1;
+}
+
+.react-calendar__navigation__arrow {
+  @apply flex items-center justify-center;
+}
+
+.react-calendar__month-view__weekdays {
+  @apply text-muted-foreground mb-2 text-xs;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  @apply flex items-center justify-center p-1;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  @apply no-underline;
+}
+
+.react-calendar__tile {
+  @apply hover:bg-accent hover:text-accent-foreground relative h-9 w-9 rounded-full p-0 text-sm;
+}
+
+.react-calendar__tile--now {
+  @apply bg-accent text-accent-foreground;
+}
+
+.react-calendar__tile--active {
+  @apply bg-primary text-foreground hover:bg-primary hover:text-primary-foreground;
+}
+
+.react-calendar__tile--range {
+  @apply bg-primary/10 text-primary-foreground hover:bg-primary/20;
+}
+
+.react-calendar__tile--rangeStart,
+.react-calendar__tile--rangeEnd {
+  @apply bg-primary text-primary-foreground hover:bg-primary;
+}
+
+.react-calendar__tile:disabled {
+  @apply text-muted-foreground/30 hover:bg-transparent;
+}
+
+.react-calendar__year-view__months__month,
+.react-calendar__decade-view__years__year,
+.react-calendar__century-view__decades__decade {
+  @apply hover:bg-accent h-12 rounded-md p-2 text-sm;
+}
+
+.react-calendar__navigation__label:hover {
+  @apply bg-accent text-accent-foreground;
+}
+
+.react-calendar__navigation__label:active {
+  @apply bg-accent/80;
+}
+.react-calendar__year-view .react-calendar__tile,
+.react-calendar__decade-view .react-calendar__tile,
+.react-calendar__century-view .react-calendar__tile {
+  padding: 0 !important;
+}
+.react-calendar__navigation {
+  margin-bottom: 0px !important;
+}
+.react-calendar__tile--now {
+  background: rgba(0, 0, 255, 0.151) !important;
+  color: black !important;
+}
+.react-calendar__tile .react-calendar__year-view__months__month {
+  padding: 0 !important;
+}
+
+.react-calendar__navigation__prev2-button,
+.react-calendar__navigation__prev-button,
+.react-calendar__navigation__next-button,
+.react-calendar__navigation__next2-button {
+  font-size: 24px !important;
+  padding-bottom: 5px !important;
+}
+.react-calendar__navigation__label__labelText--from {
+  padding-bottom: 5px !important;
+}
+.react-calendar__month-view__days__day {
+  font-weight: 500 !important;
+}
+.react-calendar__tile:disabled {
+  background: transparent !important;
+}
+
+/* Hero Section Orbiting Animation Styles */
+/* Initial appearance animation */
+@keyframes appearAndPosition {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg) translateX(var(--orbit-distance))
+      rotate(0deg);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg) translateX(var(--orbit-distance))
+      rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg) translateX(var(--orbit-distance))
+      rotate(0deg);
+  }
+}
+
+/* Orbiting animation that starts after appearance */
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(var(--orbit-distance)) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(var(--orbit-distance)) rotate(-360deg);
+  }
+}
+
+.orbit-circle {
+  /* Initial state - hidden */
+  opacity: 0;
+  transform: scale(0);
+
+  /* First animation: appear and position */
+  animation:
+    appearAndPosition 1s ease-out var(--appear-delay) forwards,
+    orbit var(--orbit-duration) linear var(--orbit-delay) infinite;
+}
+
+/* Pulse Animation for Center Circle */
+@keyframes pulse-center {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+  }
+}
+
+.center-pulse {
+  animation: pulse-center 3s ease-in-out infinite;
+}
+
+/* Floating Animation for Feature Labels */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.float-label {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Hover effects for orbiting circles */
+.orbit-circle:hover .float-label {
+  opacity: 1;
+}
+
+/* Purple glowing orbit rings */
+.orbit-ring {
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.1);
+}
+
+/* Ball-like radial gradients */
+.ball-blue {
+  background: radial-gradient(circle at 30% 30%, #60a5fa, #3b82f6, #1d4ed8);
+  box-shadow:
+    0 4px 15px rgba(59, 130, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.ball-red {
+  background: radial-gradient(circle at 30% 30%, #f87171, #ef4444, #dc2626);
+  box-shadow:
+    0 4px 15px rgba(239, 68, 68, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.ball-purple {
+  background: radial-gradient(circle at 30% 30%, #a78bfa, #8b5cf6, #7c3aed);
+  box-shadow:
+    0 4px 15px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.ball-green {
+  background: radial-gradient(circle at 30% 30%, #4ade80, #22c55e, #16a34a);
+  box-shadow:
+    0 4px 15px rgba(34, 197, 94, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.ball-yellow {
+  background: radial-gradient(circle at 30% 30%, #facc15, #eab308, #ca8a04);
+  box-shadow:
+    0 4px 15px rgba(234, 179, 8, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.ball-indigo {
+  background: radial-gradient(circle at 30% 30%, #818cf8, #6366f1, #4f46e5);
+  box-shadow:
+    0 4px 15px rgba(99, 102, 241, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced ball hover effects */
+.ball-blue:hover {
+  box-shadow:
+    0 8px 25px rgba(59, 130, 246, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.ball-red:hover {
+  box-shadow:
+    0 8px 25px rgba(239, 68, 68, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.ball-purple:hover {
+  box-shadow:
+    0 8px 25px rgba(139, 92, 246, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.ball-green:hover {
+  box-shadow:
+    0 8px 25px rgba(34, 197, 94, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.ball-yellow:hover {
+  box-shadow:
+    0 8px 25px rgba(234, 179, 8, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.ball-indigo:hover {
+  box-shadow:
+    0 8px 25px rgba(99, 102, 241, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.custom-shape-divider-top-1758629210 .shape-fill {
+  fill: #0f172b;
+}

@@ -1,0 +1,1355 @@
+{
+  "info": {
+    "_postman_id": "d610cf77-26a8-41e4-9f73-7a7ca0990f6c",
+    "name": "Hospital Management System API",
+    "description": "Complete API collection for Hospital Management System with authentication and all CRUD operations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "40766595"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"hari\",\n  \"email\": \"hari@gmail.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"hari\",\n  \"middleName\": \"prashadh\",\n  \"lastName\": \"bhatt\",\n  \"role\": \"PATIENT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@gmail.com\",\n  \"password\": \"12345678\",\n  \"firstName\": \"Admin\",\n  \"middleName\": \"\",\n  \"lastName\": \"Admin\",\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register Doctor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"doctor\",\n  \"email\": \"doctor@gmail.com\",\n  \"password\": \"12345678\",\n  \"firstName\": \"doctor\",\n  \"middleName\": \"\",\n  \"lastName\": \"doctor\",\n  \"role\": \"DOCTOR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/cmf0iatdk0001n7sv09hwgujk",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "cmf0iatdk0001n7sv09hwgujk"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated John\",\n  \"lastName\": \"Updated Doe\",\n  \"email\": \"updated.john@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/cmf0iatdk0001n7sv09hwgujk",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "cmf0iatdk0001n7sv09hwgujk"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/cmf0iatdk0001n7sv09hwgujk/toggle-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "cmf0iatdk0001n7sv09hwgujk", "toggle-status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/cmf0iatdk0001n7sv09hwgujk",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "cmf0iatdk0001n7sv09hwgujk"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Doctors",
+      "item": [
+        {
+          "name": "Get All Doctors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doctors",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Doctors withfilter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doctors?page=1&limit=10&specialization=Cardiology&available=true&search=cardio",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "specialization",
+                  "value": "Cardiology"
+                },
+                {
+                  "key": "available",
+                  "value": "true"
+                },
+                {
+                  "key": "search",
+                  "value": "cardio"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Doctor by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doctors/cmf0ilkex00051nmj94qm6j30",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors", "cmf0ilkex00051nmj94qm6j30"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Doctor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"cmf0oa60h0007jz5dlujgwrjy\",\n  \"licenseNumber\": \"DOC123455\",\n  \"specialization\": \"Cardiology\",\n  \"experience\": 10,\n  \"consultationFee\": 150.00,\n  \"qualifications\": [\"MBBS\", \"MD Cardiology\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/doctors",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Doctor",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"specialization\": \"Interventional Cardiology update\",\n  \"experience\": 12,\n  \"consultationFee\": 200.00,\n  \"qualifications\": [\"MBBS\", \"MD Cardiology\", \"Fellowship in Interventional Cardiology\"],\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/doctors/cmf0ilkex00051nmj94qm6j30",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors", "cmf0ilkex00051nmj94qm6j30"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Doctor Availability",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doctors/cmf0ilkex00051nmj94qm6j30/availability",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors", "cmf0ilkex00051nmj94qm6j30", "availability"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Doctor Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doctors/cmf0ilkex00051nmj94qm6j30/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors", "cmf0ilkex00051nmj94qm6j30", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Doctor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/doctors/cmf0iozxx0003cnh0vbf1eaxj",
+              "host": ["{{baseUrl}}"],
+              "path": ["doctors", "cmf0iozxx0003cnh0vbf1eaxj"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": [
+        {
+          "name": "Get All Patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patients",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Patients filter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patients?page=1&limit=10&bloodGroup=A+&gender=MALE&search=john",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "bloodGroup",
+                  "value": "A+"
+                },
+                {
+                  "key": "gender",
+                  "value": "MALE"
+                },
+                {
+                  "key": "search",
+                  "value": "john"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patients/cmf0omjhk0002x2v0jmzs25pn",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "cmf0omjhk0002x2v0jmzs25pn"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"cmf0wjxik000546txy2e32gto\",\n  \"patientId\": \"PAT001\",\n  \"dateOfBirth\": \"1990-05-15T00:00:00.000Z\",\n  \"gender\": \"MALE\",\n  \"bloodGroup\": \"A+\",\n  \"contactNumber\": \"+1234567890\",\n  \"emergencyContact\": \"+1234567891\",\n  \"address\": \"123 Main St, City, State 12345\",\n  \"medicalHistory\": \"No significant medical history\",\n  \"allergies\": \"None known\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/patients",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Patient",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactNumber\": \"+1234567892\",\n  \"emergencyContact\": \"+1234567893\",\n  \"address\": \"456 Oak Ave, City, State 12345\",\n  \"medicalHistory\": \"Hypertension diagnosed in 2020\",\n  \"allergies\": \"Penicillin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/patients/cmf0miri00001ojhvnqm6u95k",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "cmf0miri00001ojhvnqm6u95k"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patients/cmf0oh6rr000310mppweyu2bc",
+              "host": ["{{baseUrl}}"],
+              "path": ["patients", "cmf0oh6rr000310mppweyu2bc"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Get All Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/appointments?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/appointments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "appointment_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"cmf0omjhk0002x2v0jmzs25pn\",\n  \"doctorId\": \"cmf0oa60k0009jz5df4cbipq2\",\n  \"dateTime\": \"2024-01-16T11:40:00.000Z\",\n  \"reason\": \"Regular checkup\",\n  \"notes\": \"Patient requested routine examination\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateTime\": \"2024-01-16T14:00:00.000Z\",\n  \"reason\": \"Follow-up consultation\",\n  \"status\": \"COMPLETED\",\n  \"notes\": \"Rescheduled due to doctor availability\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments/cmf0oqpqn0006x2v0m03i0s34",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments", "cmf0oqpqn0006x2v0m03i0s34"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Appointment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments/cmf0msqkc0004rd1rmxpxraxm",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments", "cmf0msqkc0004rd1rmxpxraxm"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admissions",
+      "item": [
+        {
+          "name": "Get All Admissions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admissions?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["admissions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admission by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admissions/cmf0pc2rn0003c7mnzkw6ar84",
+              "host": ["{{baseUrl}}"],
+              "path": ["admissions", "cmf0pc2rn0003c7mnzkw6ar84"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Admission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"cmf0wpetj0001cbbt2rlds0q6\",\n  \"bedId\": \"cmf0wkd75000646txdp25ojba\",\n  \"reason\": \"Emergency surgery required\",\n  \"totalAmount\": 5000.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["admissions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Admission",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dischargeDate\": \"2024-01-20T10:00:00.000Z\",\n  \"status\": \"DISCHARGED\",\n  \"totalAmount\": 7500.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admissions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["admissions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "admission_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Admission",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admissions/cmf0pb90l0001c7mnknlyhbtj",
+              "host": ["{{baseUrl}}"],
+              "path": ["admissions", "cmf0pb90l0001c7mnknlyhbtj"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Beds",
+      "item": [
+        {
+          "name": "Get All Beds",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/beds?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["beds"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bed by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/beds/cmf0p88zx0000esuo9q7zdlkq",
+              "host": ["{{baseUrl}}"],
+              "path": ["beds", "cmf0p88zx0000esuo9q7zdlkq"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Bed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bedNumber\": \"ICU-001\",\n  \"bedType\": \"ICU\",\n  \"ward\": \"Intensive Care Unit\",\n  \"pricePerDay\": 500.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/beds",
+              "host": ["{{baseUrl}}"],
+              "path": ["beds"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Bed",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isOccupied\": true,\n  \"pricePerDay\": 600.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/beds/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["beds", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "bed_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Bed",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/beds/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["beds", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "bed_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Equipment",
+      "item": [
+        {
+          "name": "Get All Equipment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/equipment?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["equipment"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equipment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/equipment/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["equipment", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "equipment_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Equipment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ECG Machine\",\n  \"type\": \"DIAGNOSTIC\",\n  \"model\": \"ECG-2000\",\n  \"serialNumber\": \"ECG001234\",\n  \"location\": \"Cardiology Department\",\n  \"purchaseDate\": \"2023-01-15T00:00:00.000Z\",\n  \"warranty\": \"2026-01-15T00:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/equipment",
+              "host": ["{{baseUrl}}"],
+              "path": ["equipment"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Equipment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"MAINTENANCE\",\n  \"location\": \"Maintenance Department\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/equipment/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["equipment", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "equipment_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Equipment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/equipment/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["equipment", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "equipment_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Medical Records",
+      "item": [
+        {
+          "name": "Get All Medical Records",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/medical-records?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical-records"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Medical Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/medical-records/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical-records", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "medical_record_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Medical Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"cmf0omjhk0002x2v0jmzs25pn\",\n  \"doctorId\": \"cmf0oa60k0009jz5df4cbipq2\",\n  \"symptoms\": \"Chest pain, shortness of breath\",\n  \"diagnosis\": \"Angina pectoris\",\n  \"treatment\": \"Nitroglycerin, lifestyle modifications\",\n  \"notes\": \"Patient advised to quit smoking and exercise regularly\",\n  \"attachments\": [\"ecg_report.pdf\", \"blood_test.pdf\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical-records"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Medical Record",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnosis\": \"Stable angina\",\n  \"treatment\": \"Beta blockers, statins\",\n  \"notes\": \"Patient responding well to treatment\",\n  \"attachments\": [\"ecg_report.pdf\", \"blood_test.pdf\"]\n\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/medical-records/cmf0vcori0001hh0od9xs5y12",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical-records", "cmf0vcori0001hh0od9xs5y12"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Medical Record",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/medical-records/cmf0vfe9m0003hh0owzpr7865",
+              "host": ["{{baseUrl}}"],
+              "path": ["medical-records", "cmf0vfe9m0003hh0owzpr7865"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Prescriptions",
+      "item": [
+        {
+          "name": "Get All Prescriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["prescriptions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Prescription by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/cmf0vzhuz0001ud1drf6jczn0",
+              "host": ["{{baseUrl}}"],
+              "path": ["prescriptions", "cmf0vzhuz0001ud1drf6jczn0"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Prescription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"cmf0omjhk0002x2v0jmzs25pn\",\n  \"doctorId\": \"cmf0oa60k0009jz5df4cbipq2\",\n  \"medicines\": [\n    {\n      \"name\": \"Aspirin\",\n      \"dosage\": \"100mg\",\n      \"frequency\": \"Once daily\",\n      \"duration\": \"30 days\",\n      \"quantity\": 30\n    },\n    {\n      \"name\": \"Metoprolol\",\n      \"dosage\": \"25mg\",\n      \"frequency\": \"Twice daily\",\n      \"duration\": \"30 days\",\n      \"quantity\": 60\n    }\n  ],\n  \"instructions\": \"Take Aspirin in the morning, Metoprolol morning and evening. Avoid alcohol.\",\n  \"validUntil\": \"2024-02-15T00:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions",
+              "host": ["{{baseUrl}}"],
+              "path": ["prescriptions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Prescription",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"instructions\": \"Updated: Take with food to avoid stomach upset\",\n  \"validUntil\": \"2024-03-15T00:00:00.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/cmf0w3xjr0001fgwb7eb6pv0b",
+              "host": ["{{baseUrl}}"],
+              "path": ["prescriptions", "cmf0w3xjr0001fgwb7eb6pv0b"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Prescription",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/prescriptions/cmf0vzhuz0001ud1drf6jczn0",
+              "host": ["{{baseUrl}}"],
+              "path": ["prescriptions", "cmf0vzhuz0001ud1drf6jczn0"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bills",
+      "item": [
+        {
+          "name": "Get All Bills",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bills?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["bills"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Bill by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bills/cmf0wzvsp0001kgf39hrvf9p9",
+              "host": ["{{baseUrl}}"],
+              "path": ["bills", "cmf0wzvsp0001kgf39hrvf9p9"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Bill",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"cmf0wpetj0001cbbt2rlds0q6\",\n  \"admissionId\": \"cmf0wtt850003ma27jw28p3b5\",\n  \"billNumber\": \"BILL001\",\n  \"totalAmount\": 5000.00,\n  \"dueDate\": \"2024-02-15T00:00:00.000Z\",\n  \"billItems\": [\n    {\n      \"description\": \"Room charges\",\n      \"quantity\": 5,\n      \"unitPrice\": 500.00,\n      \"totalPrice\": 2500.00\n    },\n    {\n      \"description\": \"Surgery charges\",\n      \"quantity\": 1,\n      \"unitPrice\": 2500.00,\n      \"totalPrice\": 2500.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bills",
+              "host": ["{{baseUrl}}"],
+              "path": ["bills"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Bill",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PARTIAL\",\n  \"paidAmount\": 2500.00\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bills/cmf0x3ihf0005crtztvyezxpk",
+              "host": ["{{baseUrl}}"],
+              "path": ["bills", "cmf0x3ihf0005crtztvyezxpk"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Bill",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bills/cmf0wzvsp0001kgf39hrvf9p9",
+              "host": ["{{baseUrl}}"],
+              "path": ["bills", "cmf0wzvsp0001kgf39hrvf9p9"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Get All Payments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/cmf0xjpdn0001mdeg0h1xqt9g",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "cmf0xjpdn0001mdeg0h1xqt9g"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"billId\": \"cmf0x3ihf0005crtztvyezxpk\",\n  \"amount\": 2500.00,\n  \"paymentMethod\": \"KHALTI\",\n  \"transactionId\": \"TXN123456\",\n  \"notes\": \"Payment for room charges\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Payment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 3000.00,\n  \"notes\": \"Updated payment amount\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "payment_id_here"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Payment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/payments/cmf0xjpdn0001mdeg0h1xqt9g",
+              "host": ["{{baseUrl}}"],
+              "path": ["payments", "cmf0xjpdn0001mdeg0h1xqt9g"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "chat",
+      "item": [
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
