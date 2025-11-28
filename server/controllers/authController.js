@@ -9,6 +9,8 @@ const {
   formatResponse,
   generateUniqueId,
 } = require("../utils/helpers");
+const sendEmail = require("../utils/email");
+const crypto = require("crypto");
 
 const registerValidation = [
   body("username")
@@ -126,17 +128,17 @@ const register = async (req, res) => {
           },
         });
       } else if (role === "PATIENT") {
-        // Create patient profile with provided data
+        // Create patient profile with provided data (fields are optional)
         await tx.patient.create({
           data: {
             userId: user.id,
             patientId: generateUniqueId("PAT"),
-            dateOfBirth: new Date(additionalData.dateOfBirth),
-            gender: additionalData.gender,
-            bloodGroup: additionalData.bloodGroup,
-            contactNumber: additionalData.contactNumber,
-            emergencyContact: additionalData.emergencyContact,
-            address: additionalData.address,
+            dateOfBirth: additionalData.dateOfBirth ? new Date(additionalData.dateOfBirth) : null,
+            gender: additionalData.gender || null,
+            bloodGroup: additionalData.bloodGroup || null,
+            contactNumber: additionalData.contactNumber || null,
+            emergencyContact: additionalData.emergencyContact || null,
+            address: additionalData.address || null,
           },
         });
       } else if (role === "ADMIN") {
@@ -168,6 +170,7 @@ const register = async (req, res) => {
     );
   } catch (error) {
     console.error("Registration error:", error);
+
     res.status(500).json(formatResponse(false, "Registration failed"));
   }
 };
@@ -548,6 +551,132 @@ const updateProfilePicture = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json(formatResponse(false, "User not found"));
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Set expiry to 10 minutes
+    const resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: otp,
+        resetPasswordExpires,
+      },
+    });
+
+    const message = `Your password reset OTP is: ${otp}\n\nThis OTP is valid for 10 minutes.`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Password Reset OTP",
+        message,
+        html: `
+          <h1>Password Reset Request</h1>
+          <p>You requested a password reset. Please use the following OTP to reset your password:</p>
+          <h2 style="color: #4F46E5; letter-spacing: 5px;">${otp}</h2>
+          <p>This OTP is valid for 10 minutes.</p>
+          <p>If you did not request this, please ignore this email.</p>
+        `,
+      });
+
+      res.json(formatResponse(true, "OTP sent to email"));
+    } catch (error) {
+      // Rollback OTP if email fails
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          resetPasswordToken: null,
+          resetPasswordExpires: null,
+        },
+      });
+      console.error("Email send error:", error);
+      return res.status(500).json(formatResponse(false, "Email could not be sent"));
+    }
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json(formatResponse(false, "Something went wrong"));
+  }
+};
+
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json(formatResponse(false, "User not found"));
+    }
+
+    if (
+      user.resetPasswordToken !== otp ||
+      !user.resetPasswordExpires ||
+      user.resetPasswordExpires < new Date()
+    ) {
+      return res.status(400).json(formatResponse(false, "Invalid or expired OTP"));
+    }
+
+    res.json(formatResponse(true, "OTP verified successfully"));
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    res.status(500).json(formatResponse(false, "Something went wrong"));
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json(formatResponse(false, "User not found"));
+    }
+
+    if (
+      user.resetPasswordToken !== otp ||
+      !user.resetPasswordExpires ||
+      user.resetPasswordExpires < new Date()
+    ) {
+      return res.status(400).json(formatResponse(false, "Invalid or expired OTP"));
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+    });
+
+    res.json(formatResponse(true, "Password reset successfully"));
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json(formatResponse(false, "Something went wrong"));
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -556,4 +685,7 @@ module.exports = {
   loginValidation,
   getRegisteredUsers,
   updateProfilePicture,
+  forgotPassword,
+  verifyOTP,
+  resetPassword,
 };

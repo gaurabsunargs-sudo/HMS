@@ -7,6 +7,9 @@ const {
   loginValidation,
   getRegisteredUsers,
   updateProfilePicture,
+  forgotPassword,
+  verifyOTP,
+  resetPassword,
 } = require("../controllers/authController");
 const { auth } = require("../middleware/auth");
 const profileUpload = require("../middleware/profileUpload");
@@ -24,5 +27,9 @@ router.put(
 );
 
 router.get("/users", auth, getRegisteredUsers);
+
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-otp", verifyOTP);
+router.post("/reset-password", resetPassword);
 
 module.exports = router;

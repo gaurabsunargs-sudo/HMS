@@ -1,6 +1,7 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const { auth: authenticateToken } = require("../middleware/auth");
+const { encryptMessage, decryptMessage } = require("../utils/encryption");
 // Emoji suggestion is now handled by Python service (serverpy)
 // See endpoints: POST /emoji-suggest/random-forest and POST /emoji-suggest/naive-bayes
 
@@ -51,9 +52,27 @@ router.get("/recent", authenticateToken, async (req, res) => {
       ORDER BY other_user_id, last_message_time DESC
     `;
 
+    // Decrypt last message content for each chat
+    const decryptedChats = recentChats.map((chat) => {
+      try {
+        return {
+          ...chat,
+          last_message_content: chat.last_message_content
+            ? decryptMessage(chat.last_message_content)
+            : null,
+        };
+      } catch (error) {
+        console.error("Failed to decrypt last message:", error);
+        return {
+          ...chat,
+          last_message_content: "[Encrypted]",
+        };
+      }
+    });
+
     res.json({
       success: true,
-      data: recentChats,
+      data: decryptedChats,
     });
   } catch (error) {
     console.error("Error fetching recent chats:", error);
@@ -300,9 +319,25 @@ router.get("/:userId", authenticateToken, async (req, res) => {
       take: 100, // Limit to last 100 messages
     });
 
+    // Decrypt messages for the authorized user
+    const decryptedMessages = messages.map((msg) => {
+      try {
+        return {
+          ...msg,
+          content: decryptMessage(msg.content),
+        };
+      } catch (error) {
+        console.error("Failed to decrypt message:", error);
+        return {
+          ...msg,
+          content: "[Encrypted message - decryption failed]",
+        };
+      }
+    });
+
     res.json({
       success: true,
-      data: messages,
+      data: decryptedMessages,
     });
   } catch (error) {
     console.error("Error fetching chat messages:", error);
@@ -356,11 +391,14 @@ router.post("/send", authenticateToken, async (req, res) => {
       });
     }
 
+    // Encrypt the message content before storing
+    const encryptedContent = encryptMessage(String(content).trim());
+
     const message = await prisma.chatMessage.create({
       data: {
         senderId: String(currentUserId),
         receiverId: String(receiverId),
-        content: String(content).trim(),
+        content: encryptedContent,
       },
       include: {
         sender: {
@@ -372,7 +410,13 @@ router.post("/send", authenticateToken, async (req, res) => {
       },
     });
 
-    return res.json({ success: true, data: message });
+    // Decrypt for response
+    const decryptedMessage = {
+      ...message,
+      content: decryptMessage(message.content),
+    };
+
+    return res.json({ success: true, data: decryptedMessage });
   } catch (error) {
     console.error("Error sending message:", error);
     return res.status(500).json({

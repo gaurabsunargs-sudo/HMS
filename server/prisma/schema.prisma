@@ -20,6 +20,8 @@ model User {
   isActive          Boolean       @default(true)
   isCurrentlyOnline Boolean       @default(false)
   lastSeen          DateTime?
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   adminProfile      AdminProfile?
@@ -62,12 +64,12 @@ model Patient {
   id               String          @id @default(cuid())
   userId           String          @unique
   patientId        String          @unique
-  dateOfBirth      DateTime
-  gender           Gender
-  bloodGroup       String
-  contactNumber    String
-  emergencyContact String
-  address          String
+  dateOfBirth      DateTime?
+  gender           Gender?
+  bloodGroup       String?
+  contactNumber    String?
+  emergencyContact String?
+  address          String?
   admissions       Admission[]
   appointments     Appointment[]
   bills            Bill[]

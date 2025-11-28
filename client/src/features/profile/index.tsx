@@ -39,8 +39,7 @@ const Profile = () => {
 
   // Type the profile data properly
   const profile = profileData?.data as any
-  const user = profile?.user
-  const role = user?.role || 'PATIENT'
+  const role = profile?.role || 'PATIENT'
   const summary = profile?.summary
 
   if (isLoading) {
@@ -136,7 +135,7 @@ const Profile = () => {
         <h1 className='text-3xl font-bold tracking-tight'>
           {getGreeting()},{' '}
           <span className='text-primary'>
-            {user?.firstName} {user?.lastName}
+            {profile?.firstName} {profile?.lastName}
           </span>
         </h1>
         <p className='text-muted-foreground'>
@@ -146,10 +145,9 @@ const Profile = () => {
 
       {/* Main content with tabs */}
       <Tabs defaultValue='overview' className='space-y-6'>
-        <TabsList className='grid w-full grid-cols-3 lg:w-1/3'>
+        <TabsList className='grid w-full grid-cols-2 lg:w-1/3'>
           <TabsTrigger value='overview'>Overview</TabsTrigger>
           <TabsTrigger value='details'>Details</TabsTrigger>
-          <TabsTrigger value='activity'>Activity</TabsTrigger>
         </TabsList>
 
         <TabsContent value='overview' className='space-y-6'>
@@ -495,17 +493,17 @@ const Profile = () => {
                   <DetailItem
                     icon={<User className='h-4 w-4' />}
                     label='Full Name'
-                    value={`${user?.firstName} ${user?.middleName ? user.middleName + ' ' : ''}${user?.lastName}`}
+                    value={`${profile?.firstName} ${profile?.middleName ? profile.middleName + ' ' : ''}${profile?.lastName}`}
                   />
                   <DetailItem
                     icon={<Mail className='h-4 w-4' />}
                     label='Email Address'
-                    value={user?.email}
+                    value={profile?.email}
                   />
                   <DetailItem
                     icon={<User className='h-4 w-4' />}
                     label='Username'
-                    value={user?.username}
+                    value={profile?.username}
                   />
                 </div>
                 <div className='space-y-4'>
@@ -513,8 +511,8 @@ const Profile = () => {
                     icon={<Activity className='h-4 w-4' />}
                     label='Account Status'
                     value={
-                      <Badge variant={user?.isActive ? 'default' : 'secondary'}>
-                        {user?.isActive ? 'Active' : 'Inactive'}
+                      <Badge variant={profile?.isActive ? 'default' : 'secondary'}>
+                        {profile?.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     }
                   />
@@ -524,22 +522,22 @@ const Profile = () => {
                     value={
                       <Badge
                         variant={
-                          user?.isCurrentlyOnline ? 'default' : 'secondary'
+                          profile?.isCurrentlyOnline ? 'default' : 'secondary'
                         }
                       >
-                        {user?.isCurrentlyOnline ? 'Online' : 'Offline'}
+                        {profile?.isCurrentlyOnline ? 'Online' : 'Offline'}
                       </Badge>
                     }
                   />
                   <DetailItem
                     icon={<Clock className='h-4 w-4' />}
                     label='Member Since'
-                    value={formatDate(user?.createdAt || '')}
+                    value={formatDate(profile?.createdAt || '')}
                   />
                   <DetailItem
                     icon={<Clock className='h-4 w-4' />}
                     label='Last Updated'
-                    value={formatDate(user?.updatedAt || '')}
+                    value={formatDate(profile?.updatedAt || '')}
                   />
                 </div>
               </div>
@@ -800,16 +798,12 @@ const Profile = () => {
                                     key={payment.id}
                                     className='flex justify-between border-b pb-1 text-sm'
                                   >
-                                    <div>
-                                      <span className='font-medium'>
-                                        Rs {payment.amount}
-                                      </span>
-                                      <span className='text-muted-foreground ml-2'>
-                                        via {payment.paymentMethod}
-                                      </span>
-                                    </div>
-                                    <span className='text-muted-foreground'>
-                                      {formatDate(payment.paymentDate)}
+                                    <span>
+                                      {formatDate(payment.paymentDate)} -{' '}
+                                      {payment.paymentMethod}
+                                    </span>
+                                    <span>
+                                      Rs {payment.amount.toLocaleString()}
                                     </span>
                                   </div>
                                 ))}

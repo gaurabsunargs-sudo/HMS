@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
 import type { Patient } from '@/schema/patients-schema'
 import { toast } from 'sonner'
-import { useCreatePatient, useUpdatePatient } from '@/api/hooks'
+import { useCreatePatient, useUpdatePatient, usePatientsSelect } from '@/api/hooks'
 import { useGetUsersWithoutProfiles } from '@/api/hooks/useUsers'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { useState, useEffect } from 'react'
 
 // Define blood group and gender types explicitly
 const bloodGroupValues = [
@@ -78,13 +79,27 @@ const PatientEnrollmentForm = ({
   patient,
   isEdit = false,
 }: PatientEnrollmentFormProps) => {
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('')
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(
+    patient || null
+  )
+
   const { data: usersData, isLoading: isLoadingUsers } =
     useGetUsersWithoutProfiles()
+
+  const { data: patientsData, isLoading: isLoadingPatients } =
+    usePatientsSelect({})
 
   const userOptions =
     usersData?.data?.map((user) => ({
       value: user.id,
       label: `${user.firstName} ${user.lastName} (${user.username})`,
+    })) || []
+
+  const patientOptions =
+    patientsData?.data?.map((patient) => ({
+      value: patient.id,
+      label: `${patient.user.firstName} ${patient.user.lastName} - ${patient.patientId}`,
     })) || []
 
   const form = useForm<FormValues>({
@@ -105,6 +120,41 @@ const PatientEnrollmentForm = ({
     },
   })
 
+  // Update form when a patient is selected
+  useEffect(() => {
+    if (selectedPatient) {
+      form.reset({
+        userId: selectedPatient.userId,
+        patientId: selectedPatient.patientId,
+        dateOfBirth: new Date(selectedPatient.dateOfBirth),
+        gender: selectedPatient.gender as (typeof genderValues)[number],
+        bloodGroup: selectedPatient.bloodGroup as (typeof bloodGroupValues)[number],
+        contactNumber: selectedPatient.contactNumber,
+        emergencyContact: selectedPatient.emergencyContact,
+        address: selectedPatient.address,
+      })
+    } else if (!patient) {
+      form.reset({
+        userId: '',
+        patientId: '',
+        dateOfBirth: undefined,
+        gender: undefined,
+        bloodGroup: undefined,
+        contactNumber: '',
+        emergencyContact: '',
+        address: '',
+      })
+    }
+  }, [selectedPatient, patient, form])
+
+  // Handle patient selection from dropdown
+  const handlePatientSelect = (patientId: string | number) => {
+    const id = String(patientId)
+    setSelectedPatientId(id)
+    const patient = patientsData?.data?.find((p) => p.id === id)
+    setSelectedPatient(patient || null)
+  }
+
   const navigate = useNavigate()
   const createPatient = useCreatePatient()
   const updatePatient = useUpdatePatient()
@@ -115,9 +165,13 @@ const PatientEnrollmentForm = ({
       dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd'),
     }
 
-    if (isEdit && patient) {
+    // If we have a selected patient or are in edit mode, update
+    if (selectedPatient || (isEdit && patient)) {
+      const patientToUpdate = selectedPatient || patient
+      if (!patientToUpdate) return
+
       updatePatient.mutate(
-        { id: patient.id, updatedPatient: payload },
+        { id: patientToUpdate.id, updatedPatient: payload },
         {
           onSuccess: () => {
             toast.success('Patient updated successfully!')
@@ -130,6 +184,7 @@ const PatientEnrollmentForm = ({
         }
       )
     } else {
+      // Create new patient
       createPatient.mutate(payload, {
         onSuccess: () => {
           toast.success('Patient created successfully!')
@@ -148,7 +203,29 @@ const PatientEnrollmentForm = ({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-6'>
           <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-            {!isEdit ? (
+            {!isEdit && (
+              <div className='md:col-span-2'>
+                <FormItem>
+                  <FormLabel>Select Existing Patient (Optional)</FormLabel>
+                  <FormControl>
+                    <SearchableDropdown
+                      options={patientOptions}
+                      placeholder='Search for an existing patient...'
+                      onSelect={handlePatientSelect}
+                      value={selectedPatientId}
+                      isLoading={isLoadingPatients}
+                      loadingText='Loading patients...'
+                      showCross={true}
+                    />
+                  </FormControl>
+                  <p className='text-sm text-muted-foreground mt-1'>
+                    Select a patient to update their information, or leave empty to create a new patient profile
+                  </p>
+                </FormItem>
+              </div>
+            )}
+
+            {!isEdit && !selectedPatient ? (
               <FormField
                 control={form.control}
                 name='userId'
@@ -170,23 +247,23 @@ const PatientEnrollmentForm = ({
                   </FormItem>
                 )}
               />
-            ) : (
+            ) : (isEdit || selectedPatient) ? (
               <FormItem>
-                <FormLabel required>Your User Name</FormLabel>
+                <FormLabel required>User Name</FormLabel>
                 <FormControl>
                   <Input
-                    disabled={isEdit}
+                    disabled={true}
                     value={
-                      patient?.user.firstName +
-                      ' ' +
-                      patient?.user.middleName +
-                      ' ' +
-                      patient?.user.lastName
+                      selectedPatient
+                        ? `${selectedPatient.user.firstName} ${selectedPatient.user.middleName || ''} ${selectedPatient.user.lastName}`.trim()
+                        : patient
+                          ? `${patient.user.firstName} ${patient.user.middleName || ''} ${patient.user.lastName}`.trim()
+                          : ''
                     }
                   />
                 </FormControl>
               </FormItem>
-            )}
+            ) : null}
 
             <FormField
               control={form.control}
@@ -334,10 +411,10 @@ const PatientEnrollmentForm = ({
               type='submit'
               isLoading={createPatient.isPending || updatePatient.isPending}
               loadingText={
-                isEdit ? 'Updating patient...' : 'Creating patient...'
+                selectedPatient || isEdit ? 'Updating patient...' : 'Creating patient...'
               }
             >
-              {isEdit ? 'Update Patient' : 'Register Patient'}
+              {selectedPatient || isEdit ? 'Update Patient' : 'Register Patient'}
             </Button>
           </div>
         </form>
