@@ -69,23 +69,23 @@ def predict_emoji(text: str, top_n: int = 5) -> List[Dict]:
     return results
 
 
-def predict_single_emoji(text: str) -> str:
-    """Predict single best emoji for given text"""
-    predictions = predict_emoji(text, top_n=1)
-    if predictions:
-        return predictions[0]["emoji"]
-    return "❓"
+# def predict_single_emoji(text: str) -> str:
+#     """Predict single best emoji for given text"""
+#     predictions = predict_emoji(text, top_n=1)
+#     if predictions:
+#         return predictions[0]["emoji"]
+#     return "❓"
 
 
-if __name__ == "__main__":
-    test_texts = [
-        "I am so happy today!",
-        "This is amazing and I love it",
-        "Feeling sad and lonely"
-    ]
+# if __name__ == "__main__":
+#     test_texts = [
+#         "I am so happy today!",
+#         "This is amazing and I love it",
+#         "Feeling sad and lonely"
+#     ]
     
-    for text in test_texts:
-        predictions = predict_emoji(text, top_n=3)
-        print(f"\n{text}")
-        for i, pred in enumerate(predictions, 1):
-            print(f"  {i}. {pred['emoji']} ({pred['probability']:.2%})")
+#     for text in test_texts:
+#         predictions = predict_emoji(text, top_n=3)
+#         print(f"\n{text}")
+#         for i, pred in enumerate(predictions, 1):
+#             print(f"  {i}. {pred['emoji']} ({pred['probability']:.2%})")
