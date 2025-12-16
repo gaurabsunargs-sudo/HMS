@@ -60,21 +60,22 @@ const Predictions = () => {
               <div className='flex items-center gap-4'>
                 <Button
                   onClick={submitAssessment}
-                  disabled={loading || selected.length === 0}
+                  disabled={loading || selected.length < 3}
                   size='default'
                   className={cn(
                     'h-9 px-6 text-sm font-medium transition-all',
-                    selected.length === 0 ? 'cursor-not-allowed opacity-50' : ''
+                    selected.length < 3 ? 'cursor-not-allowed opacity-50' : ''
                   )}
                 >
                   {loading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
                   {loading ? 'Processing...' : 'Generate Assessment'}
                 </Button>
 
-                {selected.length > 0 && !loading && (
+                {!loading && (
                   <div className='text-muted-foreground text-xs'>
                     {selected.length} symptom{selected.length !== 1 ? 's' : ''}{' '}
-                    selected
+                    selected{' '}
+                    {selected.length < 3 && `(Select at least 3 to continue)`}
                   </div>
                 )}
               </div>

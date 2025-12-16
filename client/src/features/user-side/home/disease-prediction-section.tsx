@@ -92,8 +92,8 @@ const DiseasePredictionSection = () => {
   }
 
   const submitPrediction = async () => {
-    if (selected.length === 0) {
-      setError('Please select at least one symptom to continue.')
+    if (selected.length < 3) {
+      setError('Please select at least 3 symptoms to continue.')
       return
     }
 
@@ -266,7 +266,8 @@ const DiseasePredictionSection = () => {
                 <div className='mt-2 flex items-center justify-between text-xs text-gray-500'>
                   <span>
                     {selected.length} symptom{selected.length !== 1 ? 's' : ''}{' '}
-                    selected
+                    selected{' '}
+                    {selected.length < 3 && `(Select at least 3 to continue)`}
                   </span>
                   {selected.length > 0 && (
                     <span>Press Enter to add custom symptoms</span>
@@ -278,11 +279,11 @@ const DiseasePredictionSection = () => {
               <div className='flex justify-start'>
                 <Button
                   onClick={submitPrediction}
-                  disabled={loading || selected.length === 0}
+                  disabled={loading || selected.length < 3}
                   size='lg'
                   className={cn(
                     'h-12 px-8 text-base font-semibold transition-all duration-200',
-                    selected.length === 0
+                    selected.length < 3
                       ? 'cursor-not-allowed bg-gray-300 text-gray-500'
                       : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:scale-105 hover:from-blue-700 hover:to-purple-700'
                   )}
