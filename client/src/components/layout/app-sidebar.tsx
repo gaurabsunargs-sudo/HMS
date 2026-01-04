@@ -17,7 +17,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state } = useSidebar()
   const { navGroups: sidebarData } = getSidebarDataByRole(getUserRole())
   return (
-    <Sidebar className='z-110' collapsible='icon' {...props}>
+    <Sidebar className='z-49' collapsible='icon' {...props}>
       <SidebarHeader
         className={`${state === 'collapsed' ? 'mb-3' : ''} flex h-[60px]! justify-center border-b border-white/50 pb-2`}
       >
@@ -29,7 +29,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <div className='flex items-center gap-2'>
             <div>
               <div className='bg-gradient-medical flex h-9 w-9 items-center justify-center rounded-lg'>
-                <Activity className='h-6 w-6 text-white' />
+                <Activity className='h-6 w-6 text-white' /> 
               </div>
             </div>
             <div>

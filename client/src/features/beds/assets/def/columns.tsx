@@ -92,7 +92,7 @@ export const columns: ColumnDef<Bed>[] = [
     ),
     cell: ({ row }) => (
       <div className='max-w-[100px] text-sm font-medium'>
-        ${row.original.pricePerDay}
+        Rs. {row.original.pricePerDay}
       </div>
     ),
   },

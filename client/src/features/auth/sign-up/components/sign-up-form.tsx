@@ -141,7 +141,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
       })
       return res.data
     },
-    onSuccess: (res) => {
+    onSuccess: () => {
       setShowSuccess(true)
       // TODO: redirect to sign-in or auto-login
     },
@@ -190,9 +190,9 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           <AlertCircle className='h-4 w-4' />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            {mutation.error instanceof Error
-              ? mutation.error.message
-              : 'An error occurred during registration. Please try again.'}
+            {mutation.error?.response?.data?.message ||
+              mutation.error?.message ||
+              'An error occurred during registration. Please try again.'}
           </AlertDescription>
         </Alert>
       )}

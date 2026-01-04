@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios'
-import { toast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 
 export function handleServerError(error: unknown) {
   // eslint-disable-next-line no-console
@@ -16,8 +16,11 @@ export function handleServerError(error: unknown) {
   }
 
   if (error instanceof AxiosError) {
-    errMsg = error.response?.data.title
+    errMsg =
+      error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.message
   }
 
-  toast({ variant: 'destructive', title: errMsg })
+  toast.error(errMsg)
 }

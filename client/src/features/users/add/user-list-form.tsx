@@ -82,10 +82,6 @@ const UserForm = ({ updateData }: UserFormProps) => {
         toast.success('User created successfully!')
         navigate({ to: '/dashboard/users' })
       },
-      onError: (error) => {
-        console.error('Failed to create user:', error)
-        toast.error('Failed to create user')
-      },
     })
   }
 

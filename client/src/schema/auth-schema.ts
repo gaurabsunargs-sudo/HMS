@@ -3,7 +3,7 @@
 export interface RegisterUserRequest {
   username: string
   email: string
-  password: string
+  password?: string
   firstName: string
   middleName?: string
   lastName: string

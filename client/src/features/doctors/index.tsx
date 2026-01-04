@@ -7,17 +7,22 @@ import {
 } from '@/redux/slices/doctorListSlice'
 import { useAppDispatch, useAppSelector } from '@/redux/store'
 import { useDoctors } from '@/api/hooks/useDoctors'
+import getUserRole from '@/lib/get-user-role'
 import PageHeader from '@/components/pageHeader'
 import { DataTable } from '@/components/table/TableComponent'
 import Pagination from './assets/Pagination'
 import TableFilter from './assets/TableFilter'
-import { columns } from './assets/def/columns'
+import { createColumns } from './assets/def/columns'
 
 const DoctorList = () => {
   const page = useAppSelector(selectPageDoctors)
   const limit = useAppSelector(selectRowsDoctors)
   const search = useAppSelector(selectSearchDoctors)
   const dispatch = useAppDispatch()
+
+  const userRole = getUserRole()
+  const isAdmin = userRole === 'admin'
+  const columns = createColumns(isAdmin)
 
   const {
     data: doctorListData,

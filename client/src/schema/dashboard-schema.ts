@@ -7,7 +7,9 @@
   occupiedBeds: number
   totalBeds: number
   pendingBills: number
+  totalMedicalRecords?: number
   recentAppointments: {
+
     id: string
     patient: {
       user: {

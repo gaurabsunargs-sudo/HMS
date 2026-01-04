@@ -38,7 +38,7 @@ export const usePatients = ({
     },
   })
 }
-export const usePatientsSelect = ({}: {
+export const usePatientsSelect = ({ }: {
   page?: number
   limit?: number
   bloodGroup?: string
@@ -46,7 +46,7 @@ export const usePatientsSelect = ({}: {
   search?: string
 }) => {
   return useQuery<PatientsResponse, Error>({
-    queryKey: ['patientsSelect'],
+    queryKey: ['patients', 'select'],
     queryFn: async () => {
       const { data } = await api.get<PatientsResponse>('/patients/select')
       return data
@@ -71,9 +71,8 @@ export const useCreatePatient = () => {
     mutationFn: (newPatient: CreatePatientRequest) =>
       api.post('/patients', newPatient),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['patients', 'patientsSelect'],
-      })
+      queryClient.invalidateQueries({ queryKey: ['patients'] })
+      queryClient.invalidateQueries({ queryKey: ['patientsSelect'] })
     },
   })
 }
@@ -84,9 +83,8 @@ export const useRegisterPatient = () => {
     mutationFn: (newPatient: RegisterPatientWithUserRequest) =>
       api.post('/patients/register', newPatient),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['patients', 'patientsSelect'],
-      })
+      queryClient.invalidateQueries({ queryKey: ['patients'] })
+      queryClient.invalidateQueries({ queryKey: ['patientsSelect'] })
       queryClient.invalidateQueries({ queryKey: ['user'] })
     },
   })
@@ -103,9 +101,8 @@ export const useUpdatePatient = () => {
       updatedPatient: UpdatePatientRequest
     }) => api.put(`/patients/${id}`, updatedPatient),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['patients', 'patientsSelect'],
-      })
+      queryClient.invalidateQueries({ queryKey: ['patients'] })
+      queryClient.invalidateQueries({ queryKey: ['patientsSelect'] })
     },
   })
 }
@@ -115,9 +112,8 @@ export const useDeletePatient = () => {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/patients/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['patients', 'patientsSelect'],
-      })
+      queryClient.invalidateQueries({ queryKey: ['patients'] })
+      queryClient.invalidateQueries({ queryKey: ['patientsSelect'] })
     },
   })
 }

@@ -132,10 +132,6 @@ const AppointmentForm = ({
             toast.success('Appointment updated successfully!')
             navigate({ to: '/dashboard/appointments' })
           },
-          onError: (error) => {
-            console.error('Failed to update appointment:', error)
-            toast.error('Failed to update appointment')
-          },
         }
       )
     } else {
@@ -143,10 +139,6 @@ const AppointmentForm = ({
         onSuccess: () => {
           toast.success('Appointment created successfully!')
           navigate({ to: '/dashboard/appointments' })
-        },
-        onError: (error) => {
-          console.error('Failed to create appointment:', error)
-          toast.error('Failed to create appointment')
         },
       })
     }
@@ -213,6 +205,7 @@ const AppointmentForm = ({
                       onChange={field.onChange}
                       placeholder='Pick a date'
                       disableFuture={false}
+                      disablePast={true}
                     />
                   </FormControl>
                   <FormMessage />

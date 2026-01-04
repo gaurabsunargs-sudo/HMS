@@ -84,12 +84,14 @@ export function ProfileDropdown() {
               Profile
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to={getBillingLink()} className='flex items-center gap-2'>
-              <CreditCard className='h-4 w-4' />
-              {userData?.role === 'PATIENT' ? 'Payments' : 'Billing'}
-            </Link>
-          </DropdownMenuItem>
+          {userData?.role !== 'DOCTOR' && (
+            <DropdownMenuItem asChild>
+              <Link to={getBillingLink()} className='flex items-center gap-2'>
+                <CreditCard className='h-4 w-4' />
+                {userData?.role === 'PATIENT' ? 'Payments' : 'Billing'}
+              </Link>
+            </DropdownMenuItem>
+          )}
           {userData?.role === 'ADMIN' && (
             <DropdownMenuItem asChild>
               <Link to='/dashboard/users' className='flex items-center gap-2'>

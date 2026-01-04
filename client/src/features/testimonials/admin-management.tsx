@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Eye, EyeOff, Edit, Trash2, CheckCircle, XCircle } from 'lucide-react'
+import { Eye, EyeOff, Trash2, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useAllTestimonials,
@@ -10,7 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DataTable } from '@/components/ui/data-table'
+import { DataTable } from '@/components/table/TableComponent'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -26,7 +25,6 @@ const TestimonialsManagement = () => {
   const [approvedFilter, setApprovedFilter] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  const queryClient = useQueryClient()
   const toggleApproval = useToggleTestimonialApproval()
   const deleteTestimonial = useDeleteTestimonial()
 
@@ -43,8 +41,8 @@ const TestimonialsManagement = () => {
       toast.success(
         `Testimonial ${!currentStatus ? 'approved' : 'disapproved'} successfully`
       )
-    } catch (error) {
-      toast.error('Failed to update testimonial status')
+    } catch (error: any) {
+      // Error handled globally
     }
   }
 
@@ -53,8 +51,8 @@ const TestimonialsManagement = () => {
       try {
         await deleteTestimonial.mutateAsync(id)
         toast.success('Testimonial deleted successfully')
-      } catch (error) {
-        toast.error('Failed to delete testimonial')
+      } catch (error: any) {
+        // Error handled globally
       }
     }
   }
@@ -85,9 +83,8 @@ const TestimonialsManagement = () => {
           {Array.from({ length: 5 }, (_, i) => (
             <span
               key={i}
-              className={`text-sm ${
-                i < row.original.rating ? 'text-yellow-400' : 'text-gray-300'
-              }`}
+              className={`text-sm ${i < row.original.rating ? 'text-yellow-400' : 'text-gray-300'
+                }`}
             >
               ★
             </span>
@@ -310,14 +307,35 @@ const TestimonialsManagement = () => {
         </CardHeader>
         <CardContent>
           <DataTable
+            loading={isLoading}
             columns={columns}
             data={filteredData}
-            pagination={{
-              page,
-              limit,
-              total: filteredData.length,
-              onPageChange: setPage,
-            }}
+            DataTableToolbar={() => null}
+            TableFooterCustom={() => (
+              <div className='flex items-center justify-between p-2'>
+                <div className='text-sm text-gray-600'>
+                  Showing {filteredData.length} testimonials
+                </div>
+                <div className='flex gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={filteredData.length < limit}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           />
         </CardContent>
       </Card>

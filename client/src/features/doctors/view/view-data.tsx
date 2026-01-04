@@ -137,7 +137,7 @@ const ViewData = ({ viewData }: ViewDataProps) => {
                   <p className='text-sm font-medium text-gray-500'>
                     Consultation Fee
                   </p>
-                  <p className='font-semibold'>${consultationFee}</p>
+                  <p className='font-semibold'>Rs. {consultationFee}</p>
                 </div>
               </div>
             </div>

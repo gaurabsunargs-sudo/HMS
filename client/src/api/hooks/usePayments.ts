@@ -50,6 +50,7 @@ export const useCreatePayment = () => {
       api.post('/payments', newPayment),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] })
+      queryClient.invalidateQueries({ queryKey: ['bills'] })
     },
   })
 }
@@ -66,6 +67,7 @@ export const useUpdatePayment = () => {
     }) => api.put(`/payments/${id}`, updatedPayment),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] })
+      queryClient.invalidateQueries({ queryKey: ['bills'] })
     },
   })
 }
@@ -76,6 +78,7 @@ export const useDeletePayment = () => {
     mutationFn: (id: string) => api.delete(`/payments/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments'] })
+      queryClient.invalidateQueries({ queryKey: ['bills'] })
     },
   })
 }

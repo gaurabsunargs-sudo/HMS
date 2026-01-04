@@ -8,6 +8,7 @@ import {
 } from '@/redux/slices/paymentListSlice'
 import { useAppDispatch } from '@/redux/store'
 import { Plus, Search } from 'lucide-react'
+import getUserRole from '@/lib/get-user-role'
 import { useDebounce } from '@/hooks/useDebounce'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,6 +32,8 @@ export function TopSearchContent<TData>({
     dispatch(setSearchPayments(debouncedSearchInput))
   }, [debouncedSearchInput, dispatch])
   const navigation = useNavigate()
+  const userRole = getUserRole()
+  const isAdmin = userRole === 'admin'
   return (
     <div className='flex w-full flex-col flex-wrap gap-3'>
       <div className='flex items-center justify-between'>
@@ -60,9 +63,13 @@ export function TopSearchContent<TData>({
         </div>
         <div className='flex gap-3'>
           <DataTableViewOptions table={table} />
-          <Button onClick={() => navigation({ to: '/dashboard/payments/add' })}>
-            Add Payment <Plus size={16} className='ml-1' />
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={() => navigation({ to: '/dashboard/payments/add' })}
+            >
+              Add Payment <Plus size={16} className='ml-1' />
+            </Button>
+          )}
         </div>
       </div>
     </div>

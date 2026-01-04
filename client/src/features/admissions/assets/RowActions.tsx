@@ -8,6 +8,7 @@ import {
   useDeleteAdmission,
   useUpdateAdmission,
 } from '@/api/hooks/useAdmissions'
+import getUserRole from '@/lib/get-user-role'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -33,6 +34,9 @@ export function DataTableRowActions<TData extends { id: string }>({
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+
+  const userRole = getUserRole()
+  const isPatient = userRole === 'patient'
 
   const { mutateAsync: deleteAdmissionById, isPending: isDeleting } =
     useDeleteAdmission()
@@ -91,11 +95,9 @@ export function DataTableRowActions<TData extends { id: string }>({
       })
       toast.success('Discharge successful')
     } catch (e: any) {
-      const message = e?.response?.data?.message || 'Discharge failed'
+      const message = e?.response?.data?.message || ''
       if (message.includes('Pending payment')) {
         setIsPayModalOpen(true)
-      } else {
-        toast.error(message)
       }
     }
   }
@@ -115,7 +117,7 @@ export function DataTableRowActions<TData extends { id: string }>({
       setPayingBillId('')
       setPayAmount(0)
     } catch (err) {
-      toast.error('Payment failed')
+      console.error('Payment failed:', err)
     }
   }
   const handleViewClick = () => {
@@ -142,7 +144,6 @@ export function DataTableRowActions<TData extends { id: string }>({
       toast.success('Admission deleted successfully!')
       handleCloseDeleteModal()
     } catch (error) {
-      toast.error('Error deleting admission')
       console.error('Error deleting admission:', error)
     } finally {
       setIsLoading(false)
@@ -161,33 +162,39 @@ export function DataTableRowActions<TData extends { id: string }>({
           <Eye size={16} />
         </Button>
 
-        <Button
-          onClick={handleEditClick}
-          size='icon'
-          variant='ghost'
-          className='!h-7 !w-7 bg-blue-800 text-white hover:bg-blue-900 hover:text-white'
-        >
-          <PencilLine size={16} />
-        </Button>
+        {!isPatient && (
+          <Button
+            onClick={handleEditClick}
+            size='icon'
+            variant='ghost'
+            className='!h-7 !w-7 bg-blue-800 text-white hover:bg-blue-900 hover:text-white'
+          >
+            <PencilLine size={16} />
+          </Button>
+        )}
 
-        <Button
-          onClick={handleDischargeClick}
-          size='icon'
-          variant='ghost'
-          className='!h-7 !w-7 bg-amber-600 text-white hover:bg-amber-700 hover:text-white'
-          disabled={isUpdating}
-        >
-          <LogOut size={16} />
-        </Button>
+        {!isPatient && (
+          <Button
+            onClick={handleDischargeClick}
+            size='icon'
+            variant='ghost'
+            className='!h-7 !w-7 bg-amber-600 text-white hover:bg-amber-700 hover:text-white'
+            disabled={isUpdating}
+          >
+            <LogOut size={16} />
+          </Button>
+        )}
 
-        <Button
-          onClick={handleDeleteClick}
-          size='icon'
-          variant='ghost'
-          className='!h-7 !w-7 bg-red-600 text-white hover:bg-red-700 hover:text-white'
-        >
-          <Trash2 size={16} />
-        </Button>
+        {!isPatient && (
+          <Button
+            onClick={handleDeleteClick}
+            size='icon'
+            variant='ghost'
+            className='!h-7 !w-7 bg-red-600 text-white hover:bg-red-700 hover:text-white'
+          >
+            <Trash2 size={16} />
+          </Button>
+        )}
       </div>
 
       <DeleteConfirmation

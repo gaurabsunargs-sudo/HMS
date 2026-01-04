@@ -47,14 +47,9 @@ export function UpdatePasswordDialog({
       return
     }
 
-    try {
-      await updatePassword({ userId, password })
-      toast.success('Password updated successfully')
-      handleClose()
-    } catch (error) {
-      toast.error('Failed to update password')
-      console.error('Error updating password:', error)
-    }
+    await updatePassword({ userId, password })
+    toast.success('Password updated successfully')
+    handleClose()
   }
 
   const handleClose = () => {

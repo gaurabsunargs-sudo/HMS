@@ -29,7 +29,7 @@ export const columns: ColumnDef<Patient>[] = [
     ),
     cell: ({ row }) => (
       <div className='max-w-[100px] text-sm font-medium'>
-        {row.original.patientId}
+        {row?.original?.patientId || '-'}
       </div>
     ),
   },
@@ -40,15 +40,15 @@ export const columns: ColumnDef<Patient>[] = [
       <DataTableColumnHeader column={column} title='Name' />
     ),
     cell: ({ row }) => {
-      const firstName = row.original.user.firstName
-      const middleName = row.original.user.middleName || ''
-      const lastName = row.original.user.lastName || ''
+      const firstName = row?.original?.user?.firstName || ''
+      const middleName = row?.original?.user?.middleName || ''
+      const lastName = row?.original?.user?.lastName || ''
       const fullName = [firstName, middleName, lastName]
         .filter(Boolean)
         .join(' ')
       return (
         <div className='line-clamp-1 max-w-[150px] text-sm font-medium'>
-          {fullName}
+          {fullName || '-'}
         </div>
       )
     },
@@ -60,7 +60,9 @@ export const columns: ColumnDef<Patient>[] = [
       <DataTableColumnHeader column={column} title='Email' />
     ),
     cell: ({ row }) => (
-      <div className='max-w-[200px] text-sm'>{row.original.user.email}</div>
+      <div className='max-w-[200px] text-sm'>
+        {row?.original?.user?.email || '-'}
+      </div>
     ),
   },
 
@@ -70,7 +72,9 @@ export const columns: ColumnDef<Patient>[] = [
       <DataTableColumnHeader column={column} title='Contact' />
     ),
     cell: ({ row }) => (
-      <div className='max-w-[120px] text-sm'>{row.original.contactNumber}</div>
+      <div className='max-w-[120px] text-sm'>
+        {row?.original?.contactNumber || '-'}
+      </div>
     ),
   },
 
@@ -81,7 +85,7 @@ export const columns: ColumnDef<Patient>[] = [
     ),
     cell: ({ row }) => (
       <div className='max-w-[80px] text-sm capitalize'>
-        {row.original.gender.toLowerCase()}
+        {row?.original?.gender?.toLowerCase() || '-'}
       </div>
     ),
   },
@@ -93,7 +97,7 @@ export const columns: ColumnDef<Patient>[] = [
     ),
     cell: ({ row }) => (
       <div className='max-w-[80px] text-sm font-medium'>
-        {row.original.bloodGroup}
+        {row?.original?.bloodGroup || '-'}
       </div>
     ),
   },
@@ -104,13 +108,13 @@ export const columns: ColumnDef<Patient>[] = [
       <DataTableColumnHeader column={column} title='Role' />
     ),
     cell: ({ row }) => {
-      const role = row.original.user.role
+      const role = row?.original?.user?.role
       return role ? (
         <span className='rounded-md border border-purple-300 bg-purple-100 px-2 py-0.5 text-xs text-purple-700 capitalize'>
           {role.toLowerCase()}
         </span>
       ) : (
-        <span className='text-gray-500 italic'>No role</span>
+        <span className='text-gray-500'>-</span>
       )
     },
   },

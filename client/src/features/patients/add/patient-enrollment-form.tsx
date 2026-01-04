@@ -177,10 +177,6 @@ const PatientEnrollmentForm = ({
             toast.success('Patient updated successfully!')
             navigate({ to: '/dashboard/patients' })
           },
-          onError: (error) => {
-            console.error('Failed to update patient:', error)
-            toast.error('Failed to update patient')
-          },
         }
       )
     } else {
@@ -189,10 +185,6 @@ const PatientEnrollmentForm = ({
         onSuccess: () => {
           toast.success('Patient created successfully!')
           navigate({ to: '/dashboard/patients' })
-        },
-        onError: (error) => {
-          console.error('Failed to create patient:', error)
-          toast.error('Failed to create patient')
         },
       })
     }

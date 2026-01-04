@@ -53,6 +53,7 @@ export const columns: ColumnDef<Admission>[] = [
         {row.original.patient?.patientId || 'N/A'}
       </div>
     ),
+    initialHidden: true,
   },
 
   {
@@ -101,6 +102,7 @@ export const columns: ColumnDef<Admission>[] = [
         {row.original.reason || 'No reason provided'}
       </div>
     ),
+    initialHidden: true,
   },
 
   {
@@ -252,6 +254,7 @@ export const columns: ColumnDef<Admission>[] = [
 
       return <div className='max-w-[120px] text-sm'>{formattedDate}</div>
     },
+    initialHidden: true,
   },
 
   {

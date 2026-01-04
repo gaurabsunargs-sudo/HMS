@@ -89,7 +89,7 @@ const DoctorCard = ({
           {/* Specialization and Fee in same row */}
           <div className='mb-3 flex items-center justify-between gap-2'>
             <div className='flex-1 rounded-full bg-gradient-to-r from-purple-100 to-blue-100 px-3 py-1'>
-              <span className='text-sm font-semibold text-purple-700 capitalize'>
+              <span className='line-clamp-1 text-sm font-semibold text-purple-700 capitalize'>
                 {doctor.specialization}
               </span>
             </div>

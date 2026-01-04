@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useNavigate } from '@tanstack/react-router'
-import { toast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import { serverUrl } from '@/api/server-url'
 
 type ForgotFormProps = HTMLAttributes<HTMLDivElement>
@@ -80,23 +80,12 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
       if (result.success) {
         setEmail(data.email)
         setStep('OTP')
-        toast({
-          title: 'Success',
-          description: 'OTP sent to your email',
-        })
+        toast.success('OTP sent to your email')
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: result.message || 'Failed to send OTP',
-        })
+        toast.error(result.message || 'Failed to send OTP')
       }
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong',
-      })
+      toast.error('Something went wrong')
     } finally {
       setIsLoading(false)
     }
@@ -115,23 +104,12 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
       if (result.success) {
         setOtp(data.otp)
         setStep('PASSWORD')
-        toast({
-          title: 'Success',
-          description: 'OTP verified',
-        })
+        toast.success('OTP verified')
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: result.message || 'Invalid OTP',
-        })
+        toast.error(result.message || 'Invalid OTP')
       }
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong',
-      })
+      toast.error('Something went wrong')
     } finally {
       setIsLoading(false)
     }
@@ -148,24 +126,13 @@ export function ForgotForm({ className, ...props }: ForgotFormProps) {
       const result = await response.json()
 
       if (result.success) {
-        toast({
-          title: 'Success',
-          description: 'Password reset successfully',
-        })
+        toast.success('Password reset successfully')
         navigate({ to: '/sign-in' })
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: result.message || 'Failed to reset password',
-        })
+        toast.error(result.message || 'Failed to reset password')
       }
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Something went wrong',
-      })
+      toast.error('Something went wrong')
     } finally {
       setIsLoading(false)
     }

@@ -21,6 +21,7 @@ interface DatePickerProps {
   placeholder?: string
   id?: string
   disableFuture?: boolean
+  disablePast?: boolean
 }
 
 const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
@@ -33,6 +34,7 @@ const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       placeholder,
       id,
       disableFuture = false,
+      disablePast = false,
     },
     ref
   ) => {
@@ -51,6 +53,13 @@ const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       return date > today
+    }
+
+    const isPastDate = (date: Date) => {
+      if (!disablePast) return false
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      return date < today
     }
 
     const handleDateChange = (value: Value) => {
@@ -86,7 +95,8 @@ const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
             onChange={handleDateChange}
             value={value || null}
             maxDate={disableFuture ? new Date() : undefined}
-            tileDisabled={({ date }) => isFutureDate(date)}
+            minDate={disablePast ? new Date() : undefined}
+            tileDisabled={({ date }) => isFutureDate(date) || isPastDate(date)}
             className='bg-background text-foreground rounded-md border p-1 shadow-sm'
           />
         </PopoverContent>

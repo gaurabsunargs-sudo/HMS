@@ -75,10 +75,6 @@ const BedForm = ({ bed, isEdit = false }: BedFormProps) => {
             toast.success('Bed updated successfully!')
             navigate({ to: '/dashboard/beds' })
           },
-          onError: (error) => {
-            console.error('Failed to update bed:', error)
-            toast.error('Failed to update bed')
-          },
         }
       )
     } else {
@@ -86,10 +82,6 @@ const BedForm = ({ bed, isEdit = false }: BedFormProps) => {
         onSuccess: () => {
           toast.success('Bed created successfully!')
           navigate({ to: '/dashboard/beds' })
-        },
-        onError: (error) => {
-          console.error('Failed to create bed:', error)
-          toast.error('Failed to create bed')
         },
       })
     }

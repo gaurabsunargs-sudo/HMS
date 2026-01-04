@@ -8,6 +8,7 @@ import {
 } from '@/redux/slices/patientListSlice'
 import { useAppDispatch } from '@/redux/store'
 import { Plus, Search } from 'lucide-react'
+import getUserRole from '@/lib/get-user-role'
 import { useDebounce } from '@/hooks/useDebounce'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,6 +25,9 @@ export function TopSearchContent<TData>({
   const dispatch = useAppDispatch()
   const [searchInput, setSearchInput] = useState('')
   const debouncedSearchInput = useDebounce(searchInput, 300)
+
+  const userRole = getUserRole()
+  const isAdmin = userRole === 'admin'
 
   useEffect(() => {
     dispatch(setPagePatients(1))
@@ -60,9 +64,13 @@ export function TopSearchContent<TData>({
         </div>
         <div className='flex gap-3'>
           <DataTableViewOptions table={table} />
-          <Button onClick={() => navigation({ to: '/dashboard/patients/add' })}>
-            Add Patient <Plus size={16} className='ml-1' />
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={() => navigation({ to: '/dashboard/patients/add' })}
+            >
+              Add Patient <Plus size={16} className='ml-1' />
+            </Button>
+          )}
         </div>
       </div>
     </div>

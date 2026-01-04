@@ -32,6 +32,16 @@ export const useBeds = ({
   })
 }
 
+export const useBedsSelect = () => {
+  return useQuery<BedsResponse, Error>({
+    queryKey: ['beds', 'select'],
+    queryFn: async () => {
+      const { data } = await api.get<BedsResponse>('/beds/select')
+      return data
+    },
+  })
+}
+
 export const useBedById = (id: string | null) => {
   return useQuery<Bed, Error>({
     queryKey: ['bed', id],

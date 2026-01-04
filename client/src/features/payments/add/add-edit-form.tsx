@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input'
 import SearchableDropdown from '@/components/ui/searchable-dropdown'
 import { Textarea } from '@/components/ui/textarea'
 
-type PaymentMethod = 'CASH' | 'BANK'
+type PaymentMethod = 'CASH' | 'BANK_TRANSFER'
 
 interface CreatePaymentRequest {
   billId: string
@@ -56,7 +56,7 @@ interface UpdatePaymentRequest {
 const formSchema = z.object({
   billId: z.string().min(1, 'Bill selection is required'),
   amount: z.number().min(0.01, 'Amount must be greater than 0'),
-  paymentMethod: z.enum(['CASH', 'BANK'], {
+  paymentMethod: z.enum(['CASH', 'BANK_TRANSFER'], {
     required_error: 'Payment method is required',
   }),
   notes: z.string().optional(),
@@ -81,7 +81,9 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
   const { data: billsData, isLoading: isLoadingBills } = useBills({})
   const [selectedBillId, setSelectedBillId] = useState(payment?.billId || '')
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
-    useState<PaymentMethod>(payment?.paymentMethod || 'CASH')
+    useState<PaymentMethod>(
+      (payment?.paymentMethod as PaymentMethod) || 'CASH'
+    )
 
   // Get current user info for receivedBy field
   const getCurrentUser = () => {
@@ -120,7 +122,7 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
           1,
           Math.ceil(
             (dischargeDate.getTime() - admissionDate.getTime()) /
-              (24 * 60 * 60 * 1000)
+            (24 * 60 * 60 * 1000)
           )
         )
         bedCharge = daysDiff * parseFloat(bill.admission.bed.pricePerDay)
@@ -147,14 +149,7 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
       ?.filter((bill: any) => {
         const { actualTotalAmount } = calculateBillCharges(bill)
 
-        const paid = (bill.payments || []).reduce(
-          (sum: number, p: any) =>
-            sum +
-            (typeof p.amount === 'number'
-              ? p.amount
-              : parseFloat(p.amount || 0)),
-          0
-        )
+        const paid = bill.paidAmount || 0
         return actualTotalAmount - paid > 0
       })
       .map((bill: any) => {
@@ -165,18 +160,7 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
           actualTotalAmount,
         } = calculateBillCharges(bill)
 
-        const remainingAmount = Math.max(
-          0,
-          actualTotalAmount -
-            (bill.payments || []).reduce(
-              (s: number, p: any) =>
-                s +
-                (typeof p.amount === 'number'
-                  ? p.amount
-                  : parseFloat(p.amount || 0)),
-              0
-            )
-        )
+        const remainingAmount = Math.max(0, actualTotalAmount - (bill.paidAmount || 0))
 
         const patientName = `${bill.patient?.user?.firstName || 'Unknown'} ${bill.patient?.user?.lastName || 'Patient'}`
 
@@ -195,16 +179,8 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
         }
       }) || []
 
-  const selectedBill = billsData?.data?.find((b) => b.id === selectedBillId)
   const selectedBillOption = billOptions.find(
     (option) => option.value === selectedBillId
-  )
-
-  const totalPaid = (selectedBill?.payments || []).reduce(
-    (sum: number, p: any) =>
-      sum +
-      (typeof p.amount === 'number' ? p.amount : parseFloat(p.amount || 0)),
-    0
   )
 
   // Calculate the actual remaining amount using the selected bill option
@@ -214,7 +190,7 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
 
   const paymentMethodOptions = [
     { value: 'CASH', label: 'Cash' },
-    { value: 'BANK', label: 'Bank Transfer' },
+    { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
   ]
 
   const form = useForm<FormValues>({
@@ -231,7 +207,7 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
       bankName: payment?.bankName || '',
       transactionId:
         payment?.transactionId ||
-        (payment?.paymentMethod === 'BANK' ? generateTransactionId() : ''),
+        (payment?.paymentMethod === 'BANK_TRANSFER' ? generateTransactionId() : ''),
       cardLast4: payment?.cardLast4 || '',
       authorizationCode: payment?.authorizationCode || '',
     },
@@ -264,7 +240,7 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
     }
 
     // Auto-generate transaction ID for bank payments
-    if (paymentMethod === 'BANK' && !payment?.transactionId) {
+    if (paymentMethod === 'BANK_TRANSFER' && !payment?.transactionId) {
       form.setValue('transactionId', generateTransactionId())
     }
   }
@@ -296,10 +272,6 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
             toast.success('Payment updated successfully!')
             navigate({ to: '/dashboard/payments' })
           },
-          onError: (error) => {
-            console.error('Failed to update payment:', error)
-            toast.error('Failed to update payment')
-          },
         }
       )
     } else {
@@ -307,10 +279,6 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
         onSuccess: () => {
           toast.success('Payment created successfully!')
           navigate({ to: '/dashboard/payments' })
-        },
-        onError: (error) => {
-          console.error('Failed to create payment:', error)
-          toast.error('Failed to create payment')
         },
       })
     }
@@ -521,7 +489,7 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
           )}
 
           {/* Bank-specific fields */}
-          {selectedPaymentMethod === 'BANK' && (
+          {selectedPaymentMethod === 'BANK_TRANSFER' && (
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               <FormField
                 control={form.control}

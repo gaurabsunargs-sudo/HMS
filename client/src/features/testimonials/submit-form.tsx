@@ -78,8 +78,8 @@ const TestimonialSubmissionForm = () => {
 
       // Reset submitted state after 3 seconds
       setTimeout(() => setIsSubmitted(false), 3000)
-    } catch (error) {
-      toast.error('Failed to submit testimonial. Please try again.')
+    } catch (error: any) {
+      // Error handled globally
     }
   }
 
@@ -92,13 +92,11 @@ const TestimonialSubmissionForm = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`h-6 w-6 transition-colors ${
-          isInteractive ? 'cursor-pointer' : ''
-        } ${
-          i < currentRating
+        className={`h-6 w-6 transition-colors ${isInteractive ? 'cursor-pointer' : ''
+          } ${i < currentRating
             ? 'fill-yellow-400 text-yellow-400'
             : 'text-gray-300 hover:text-yellow-300'
-        }`}
+          }`}
         onClick={isInteractive ? () => handleRatingClick(i + 1) : undefined}
         onMouseEnter={isInteractive ? () => setHoveredRating(i + 1) : undefined}
         onMouseLeave={isInteractive ? () => setHoveredRating(0) : undefined}

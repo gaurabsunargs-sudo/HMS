@@ -53,6 +53,7 @@ export const useCreateAdmission = () => {
       api.post('/admissions', newAdmission),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admissions'] })
+      queryClient.invalidateQueries({ queryKey: ['beds'] })
     },
   })
 }
@@ -69,6 +70,7 @@ export const useUpdateAdmission = () => {
     }) => api.put(`/admissions/${id}`, updatedAdmission),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admissions'] })
+      queryClient.invalidateQueries({ queryKey: ['beds'] })
     },
   })
 }
@@ -79,6 +81,7 @@ export const useDeleteAdmission = () => {
     mutationFn: (id: string) => api.delete(`/admissions/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admissions'] })
+      queryClient.invalidateQueries({ queryKey: ['beds'] })
     },
   })
 }

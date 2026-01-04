@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios'
-import { toast } from './use-toast'
+import { toast } from 'sonner'
 
 export function useErrorHandler() {
   const handleError = (
@@ -48,11 +48,7 @@ export function useErrorHandler() {
       message = error.message || fallbackMessage
     }
 
-    toast({
-      title: 'Error',
-      description: message,
-      variant: 'destructive',
-    })
+    toast.error(message)
 
     console.error('Handled error:', error)
   }

@@ -39,9 +39,9 @@ export const useDoctors = ({
     },
   })
 }
-export const useDoctorsSelect = ({}) => {
+export const useDoctorsSelect = ({ }) => {
   return useQuery<DoctorsResponse, Error>({
-    queryKey: ['doctorsselect'],
+    queryKey: ['doctors', 'select'],
     queryFn: async () => {
       const { data } = await api.get<DoctorsResponse>('/doctors/select')
       return data
@@ -109,7 +109,8 @@ export const useCreateDoctor = () => {
     mutationFn: (newDoctor: CreateDoctorRequest) =>
       api.post('/doctors', newDoctor),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['doctors', 'doctorsselect'] })
+      queryClient.invalidateQueries({ queryKey: ['doctors'] })
+      queryClient.invalidateQueries({ queryKey: ['doctorsselect'] })
     },
   })
 }
@@ -119,7 +120,8 @@ export const useRegisterDoctor = () => {
     mutationFn: (newDoctor: RegisterDoctorRequest) =>
       api.post('/doctors/register', newDoctor),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['doctors', 'doctorsselect'] })
+      queryClient.invalidateQueries({ queryKey: ['doctors'] })
+      queryClient.invalidateQueries({ queryKey: ['doctorsselect'] })
     },
   })
 }
@@ -135,7 +137,8 @@ export const useUpdateDoctor = () => {
       updatedDoctor: UpdateDoctorRequest
     }) => api.put(`/doctors/${id}`, updatedDoctor),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['doctors', 'doctorsselect'] })
+      queryClient.invalidateQueries({ queryKey: ['doctors'] })
+      queryClient.invalidateQueries({ queryKey: ['doctorsselect'] })
     },
   })
 }
@@ -145,7 +148,8 @@ export const useToggleDoctorAvailability = () => {
   return useMutation({
     mutationFn: (id: string) => api.patch(`/doctors/${id}/availability`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['doctors', 'doctorsselect'] })
+      queryClient.invalidateQueries({ queryKey: ['doctors'] })
+      queryClient.invalidateQueries({ queryKey: ['doctorsselect'] })
     },
   })
 }
@@ -155,7 +159,8 @@ export const useDeleteDoctor = () => {
   return useMutation({
     mutationFn: (id: string) => api.delete(`/doctors/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['doctors', 'doctorsselect'] })
+      queryClient.invalidateQueries({ queryKey: ['doctors'] })
+      queryClient.invalidateQueries({ queryKey: ['doctorsselect'] })
     },
   })
 }

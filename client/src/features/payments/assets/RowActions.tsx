@@ -4,6 +4,7 @@ import type { Row } from '@tanstack/react-table'
 import { Eye, PencilLine, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDeletePayment } from '@/api/hooks/usePayments'
+import getUserRole from '@/lib/get-user-role'
 import { Button } from '@/components/ui/button'
 import { DeleteConfirmation } from '@/components/delete-conformation'
 
@@ -20,6 +21,9 @@ export function DataTableRowActions<TData extends { id: string }>({
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+
+  const userRole = getUserRole()
+  const isAdmin = userRole === 'admin'
 
   const { mutateAsync: deletePaymentById, isPending: isDeleting } =
     useDeletePayment()
@@ -57,8 +61,7 @@ export function DataTableRowActions<TData extends { id: string }>({
 
       toast.success('Payment deleted successfully!')
       handleCloseDeleteModal()
-    } catch (error) {
-      toast.error('Error deleting payment')
+    } catch (error: any) {
       console.error('Error deleting payment:', error)
     } finally {
       setIsLoading(false)
@@ -77,23 +80,27 @@ export function DataTableRowActions<TData extends { id: string }>({
           <Eye size={16} />
         </Button>
 
-        <Button
-          onClick={handleEditClick}
-          size='icon'
-          variant='ghost'
-          className='!h-7 !w-7 bg-blue-800 text-white hover:bg-blue-900 hover:text-white'
-        >
-          <PencilLine size={16} />
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={handleEditClick}
+            size='icon'
+            variant='ghost'
+            className='!h-7 !w-7 bg-blue-800 text-white hover:bg-blue-900 hover:text-white'
+          >
+            <PencilLine size={16} />
+          </Button>
+        )}
 
-        <Button
-          onClick={handleDeleteClick}
-          size='icon'
-          variant='ghost'
-          className='!h-7 !w-7 bg-red-600 text-white hover:bg-red-700 hover:text-white'
-        >
-          <Trash2 size={16} />
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={handleDeleteClick}
+            size='icon'
+            variant='ghost'
+            className='!h-7 !w-7 bg-red-600 text-white hover:bg-red-700 hover:text-white'
+          >
+            <Trash2 size={16} />
+          </Button>
+        )}
       </div>
 
       <DeleteConfirmation

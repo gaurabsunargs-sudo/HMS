@@ -8,7 +8,6 @@ import { useLogin } from '@/api/hooks/useAuth'
 import { encryptData } from '@/lib/encryptionUtils'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { toast } from '@/hooks/use-toast'
 import {
   Form,
   FormControl,
@@ -71,13 +70,6 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         navigate({
           to: redirect || '/',
           replace: true,
-        })
-      },
-      onError: (err: any) => {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: err.response?.data?.message || 'Login failed',
         })
       },
     })

@@ -91,10 +91,6 @@ const PatientRegisterForm = () => {
         toast.success('Patient created successfully!')
         navigate({ to: '/dashboard/patients' })
       },
-      onError: (error) => {
-        console.error('Failed to create patient:', error)
-        toast.error('Failed to create patient')
-      },
     })
   }
 

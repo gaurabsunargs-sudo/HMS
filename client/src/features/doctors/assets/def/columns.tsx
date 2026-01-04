@@ -9,7 +9,8 @@ import type { ColumnDef } from '@/components/table/ColumnDef'
 import { DataTableColumnHeader } from '@/components/table/ColumnHeader'
 import { DataTableRowActions } from '../RowActions'
 
-export const columns: ColumnDef<Doctor>[] = [
+export const createColumns = (isAdmin: boolean): ColumnDef<Doctor>[] => {
+  const baseColumns: ColumnDef<Doctor>[] = [
   {
     accessorKey: 'sn',
     header: ({ column }) => (
@@ -110,7 +111,7 @@ export const columns: ColumnDef<Doctor>[] = [
     ),
     cell: ({ row }) => (
       <div className='max-w-[80px] text-sm font-medium'>
-        ${row.original.consultationFee}
+        Rs. {row.original.consultationFee}
       </div>
     ),
   },
@@ -136,12 +137,18 @@ export const columns: ColumnDef<Doctor>[] = [
       )
     },
   },
+  ]
 
-  {
-    id: 'actions',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Action' />
-    ),
-    cell: ({ row }) => <DataTableRowActions row={row} />,
-  },
-]
+  // Only add actions column if user is admin
+  if (isAdmin) {
+    baseColumns.push({
+      id: 'actions',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title='Action' />
+      ),
+      cell: ({ row }) => <DataTableRowActions row={row} />,
+    })
+  }
+
+  return baseColumns
+}

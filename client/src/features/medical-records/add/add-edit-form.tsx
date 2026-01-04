@@ -116,10 +116,6 @@ const MedicalRecordForm = ({
             toast.success('Medical record updated successfully!')
             navigate({ to: '/dashboard/medical-records' })
           },
-          onError: (error) => {
-            console.error('Failed to update medical record:', error)
-            toast.error('Failed to update medical record')
-          },
         }
       )
     } else {
@@ -127,10 +123,6 @@ const MedicalRecordForm = ({
         onSuccess: () => {
           toast.success('Medical record created successfully!')
           navigate({ to: '/dashboard/medical-records' })
-        },
-        onError: (error) => {
-          console.error('Failed to create medical record:', error)
-          toast.error('Failed to create medical record')
         },
       })
     }

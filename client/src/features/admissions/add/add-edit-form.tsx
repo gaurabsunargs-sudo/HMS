@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import {
   useCreateAdmission,
   useUpdateAdmission,
-  useBeds,
+  useBedsSelect,
   usePatientsSelect,
 } from '@/api/hooks'
 import { Button } from '@/components/ui/button'
@@ -40,7 +40,7 @@ interface AdmissionFormProps {
 const AdmissionForm = ({ admission, isEdit = false }: AdmissionFormProps) => {
   const { data: patientsData, isLoading: isLoadingPatients } =
     usePatientsSelect({})
-  const { data: bedsData, isLoading: isLoadingBeds } = useBeds({})
+  const { data: bedsData, isLoading: isLoadingBeds } = useBedsSelect()
 
   const patientOptions =
     patientsData?.data?.map((patient) => {
@@ -97,10 +97,6 @@ const AdmissionForm = ({ admission, isEdit = false }: AdmissionFormProps) => {
             toast.success('Admission updated successfully!')
             navigate({ to: '/dashboard/admissions' })
           },
-          onError: (error) => {
-            console.error('Failed to update admission:', error)
-            toast.error('Failed to update admission')
-          },
         }
       )
     } else {
@@ -108,10 +104,6 @@ const AdmissionForm = ({ admission, isEdit = false }: AdmissionFormProps) => {
         onSuccess: () => {
           toast.success('Admission created successfully!')
           navigate({ to: '/dashboard/admissions' })
-        },
-        onError: (error) => {
-          console.error('Failed to create admission:', error)
-          toast.error('Failed to create admission')
         },
       })
     }

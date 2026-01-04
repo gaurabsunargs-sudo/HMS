@@ -93,10 +93,6 @@ const DoctorEnrollmentForm = ({
             toast.success('Doctor updated successfully!')
             navigate({ to: '/dashboard/doctors' })
           },
-          onError: (error) => {
-            console.error('Failed to update doctor:', error)
-            toast.error('Failed to update doctor')
-          },
         }
       )
     } else {
@@ -104,10 +100,6 @@ const DoctorEnrollmentForm = ({
         onSuccess: () => {
           toast.success('Doctor created successfully!')
           navigate({ to: '/dashboard/doctors' })
-        },
-        onError: (error) => {
-          console.error('Failed to create doctor:', error)
-          toast.error('Failed to create doctor')
         },
       })
     }

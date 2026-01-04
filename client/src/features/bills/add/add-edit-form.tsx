@@ -184,10 +184,6 @@ const BillForm = ({ bill, isEdit = false }: BillFormProps) => {
             toast.success('Bill updated successfully!')
             navigate({ to: '/dashboard/bills' })
           },
-          onError: (error) => {
-            console.error('Failed to update bill:', error)
-            toast.error('Failed to update bill')
-          },
         }
       )
     } else {
@@ -195,10 +191,6 @@ const BillForm = ({ bill, isEdit = false }: BillFormProps) => {
         onSuccess: () => {
           toast.success('Bill created successfully!')
           navigate({ to: '/dashboard/bills' })
-        },
-        onError: (error) => {
-          console.error('Failed to create bill:', error)
-          toast.error('Failed to create bill')
         },
       })
     }

@@ -120,10 +120,15 @@ export const columns: ColumnDef<Appointment>[] = [
     ),
     cell: ({ row }) => {
       const status = row.original.status
-      let variant: 'default' | 'secondary' | 'destructive' = 'default'
+
+      let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'default'
       let className = ''
 
       switch (status) {
+        case 'PENDING':
+          variant = 'secondary'
+          className = 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
+          break
         case 'SCHEDULED':
           variant = 'default'
           className = 'bg-blue-100 text-blue-800 hover:bg-blue-100'
@@ -133,8 +138,13 @@ export const columns: ColumnDef<Appointment>[] = [
           className = 'bg-green-100 text-green-800 hover:bg-green-100'
           break
         case 'CANCELLED':
+        case 'REJECTED':
           variant = 'destructive'
           className = 'bg-red-100 text-red-800 hover:bg-red-100'
+          break
+        case 'NO_SHOW':
+          variant = 'secondary'
+          className = 'bg-orange-100 text-orange-800 hover:bg-orange-100'
           break
         default:
           variant = 'secondary'
@@ -143,7 +153,7 @@ export const columns: ColumnDef<Appointment>[] = [
 
       return (
         <Badge variant={variant} className={className}>
-          {status}
+          {status === "SCHEDULED" ? "APPROVED" : status}
         </Badge>
       )
     },

@@ -43,6 +43,7 @@ export const columns: ColumnDef<Payment>[] = [
         </div>
       )
     },
+    initialHidden: true,
   },
 
   {
@@ -122,35 +123,39 @@ export const columns: ColumnDef<Payment>[] = [
       const bill = row.original.bill
       if (!bill) return <div className='max-w-[100px] text-sm'>N/A</div>
 
-      // Calculate total amount including admission and bed charges
-      let admissionCharge = 0
-      let bedCharge = 0
+      // Calculate admission charges
+      const admissionAmount = bill.admission?.totalAmount
+        ? parseFloat(bill.admission.totalAmount)
+        : 0
 
-      if (bill.admission) {
-        admissionCharge = parseFloat(String(bill.admission.totalAmount || 0))
+      // Calculate bed charges if admission exists
+      let bedCharges = 0
+      if (bill.admission && bill.admission.bed) {
+        const pricePerDay = parseFloat(bill.admission.bed.pricePerDay) || 0
+        const admissionDate = new Date(bill.admission.admissionDate)
+        const dischargeDate = bill.admission.dischargeDate
+          ? new Date(bill.admission.dischargeDate)
+          : new Date() // Use current date if not discharged
 
-        if (bill.admission.bed?.pricePerDay) {
-          const admissionDate = new Date(bill.admission.admissionDate)
-          const dischargeDate = bill.admission.dischargeDate
-            ? new Date(bill.admission.dischargeDate)
-            : new Date()
-          const daysDiff = Math.max(
-            1,
-            Math.ceil(
-              (dischargeDate.getTime() - admissionDate.getTime()) /
-                (24 * 60 * 60 * 1000)
-            )
-          )
-          bedCharge =
-            daysDiff * parseFloat(String(bill.admission.bed.pricePerDay))
-        }
+        const daysDiff = Math.ceil(
+          (dischargeDate.getTime() - admissionDate.getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+        bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
       }
 
-      const billItemsTotal = (bill.billItems || []).reduce(
-        (sum: number, item: any) => sum + (item.totalPrice || 0),
-        0
-      )
-      const totalAmount = admissionCharge + bedCharge + billItemsTotal
+      // Calculate medical services (bill items)
+      const medicalServices =
+        bill.billItems?.reduce((sum, item) => {
+          return sum + (item.totalPrice || 0)
+        }, 0) || 0
+
+      // Get bill amount
+      const billAmount = parseFloat(bill.totalAmount) || 0
+
+      // Calculate comprehensive total
+      const totalAmount =
+        admissionAmount + bedCharges + medicalServices + billAmount
 
       return (
         <div className='max-w-[100px] text-sm font-medium'>
@@ -185,35 +190,39 @@ export const columns: ColumnDef<Payment>[] = [
       const bill = row.original.bill
       if (!bill) return <div className='max-w-[100px] text-sm'>N/A</div>
 
-      // Calculate total amount including admission and bed charges
-      let admissionCharge = 0
-      let bedCharge = 0
+      // Calculate admission charges
+      const admissionAmount = bill.admission?.totalAmount
+        ? parseFloat(bill.admission.totalAmount)
+        : 0
 
-      if (bill.admission) {
-        admissionCharge = parseFloat(String(bill.admission.totalAmount || 0))
+      // Calculate bed charges if admission exists
+      let bedCharges = 0
+      if (bill.admission && bill.admission.bed) {
+        const pricePerDay = parseFloat(bill.admission.bed.pricePerDay) || 0
+        const admissionDate = new Date(bill.admission.admissionDate)
+        const dischargeDate = bill.admission.dischargeDate
+          ? new Date(bill.admission.dischargeDate)
+          : new Date() // Use current date if not discharged
 
-        if (bill.admission.bed?.pricePerDay) {
-          const admissionDate = new Date(bill.admission.admissionDate)
-          const dischargeDate = bill.admission.dischargeDate
-            ? new Date(bill.admission.dischargeDate)
-            : new Date()
-          const daysDiff = Math.max(
-            1,
-            Math.ceil(
-              (dischargeDate.getTime() - admissionDate.getTime()) /
-                (24 * 60 * 60 * 1000)
-            )
-          )
-          bedCharge =
-            daysDiff * parseFloat(String(bill.admission.bed.pricePerDay))
-        }
+        const daysDiff = Math.ceil(
+          (dischargeDate.getTime() - admissionDate.getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+        bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
       }
 
-      const billItemsTotal = (bill.billItems || []).reduce(
-        (sum: number, item: any) => sum + (item.totalPrice || 0),
-        0
-      )
-      const totalAmount = admissionCharge + bedCharge + billItemsTotal
+      // Calculate medical services (bill items)
+      const medicalServices =
+        bill.billItems?.reduce((sum, item) => {
+          return sum + (item.totalPrice || 0)
+        }, 0) || 0
+
+      // Get bill amount
+      const billAmount = parseFloat(bill.totalAmount) || 0
+
+      // Calculate comprehensive total
+      const totalAmount =
+        admissionAmount + bedCharges + medicalServices + billAmount
 
       const totalPaidAmount = (row.original as any).totalPaidAmount
       const remainingAmount = Math.max(0, totalAmount - totalPaidAmount)
@@ -300,6 +309,7 @@ export const columns: ColumnDef<Payment>[] = [
         {(row.original as any).latestPayment?.bankName || 'N/A'}
       </div>
     ),
+    initialHidden: true,
   },
 
   {
@@ -383,35 +393,39 @@ export const columns: ColumnDef<Payment>[] = [
         )
       }
 
-      // Calculate total amount including admission and bed charges
-      let admissionCharge = 0
-      let bedCharge = 0
+      // Calculate admission charges
+      const admissionAmount = bill.admission?.totalAmount
+        ? parseFloat(bill.admission.totalAmount)
+        : 0
 
-      if (bill.admission) {
-        admissionCharge = parseFloat(String(bill.admission.totalAmount || 0))
+      // Calculate bed charges if admission exists
+      let bedCharges = 0
+      if (bill.admission && bill.admission.bed) {
+        const pricePerDay = parseFloat(bill.admission.bed.pricePerDay) || 0
+        const admissionDate = new Date(bill.admission.admissionDate)
+        const dischargeDate = bill.admission.dischargeDate
+          ? new Date(bill.admission.dischargeDate)
+          : new Date() // Use current date if not discharged
 
-        if (bill.admission.bed?.pricePerDay) {
-          const admissionDate = new Date(bill.admission.admissionDate)
-          const dischargeDate = bill.admission.dischargeDate
-            ? new Date(bill.admission.dischargeDate)
-            : new Date()
-          const daysDiff = Math.max(
-            1,
-            Math.ceil(
-              (dischargeDate.getTime() - admissionDate.getTime()) /
-                (24 * 60 * 60 * 1000)
-            )
-          )
-          bedCharge =
-            daysDiff * parseFloat(String(bill.admission.bed.pricePerDay))
-        }
+        const daysDiff = Math.ceil(
+          (dischargeDate.getTime() - admissionDate.getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+        bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
       }
 
-      const billItemsTotal = (bill.billItems || []).reduce(
-        (sum: number, item: any) => sum + (item.totalPrice || 0),
-        0
-      )
-      const totalAmount = admissionCharge + bedCharge + billItemsTotal
+      // Calculate medical services (bill items)
+      const medicalServices =
+        bill.billItems?.reduce((sum, item) => {
+          return sum + (item.totalPrice || 0)
+        }, 0) || 0
+
+      // Get bill amount
+      const billAmount = parseFloat(bill.totalAmount) || 0
+
+      // Calculate comprehensive total
+      const totalAmount =
+        admissionAmount + bedCharges + medicalServices + billAmount
 
       const totalPaid = ((bill as any).payments || []).reduce(
         (sum: number, p: any) =>
@@ -423,6 +437,7 @@ export const columns: ColumnDef<Payment>[] = [
       const remainingAmount = Math.max(0, totalAmount - totalPaid)
 
       // Determine status based on remaining amount
+      let status: string
       let statusConfig: any
 
       if (remainingAmount === 0) {

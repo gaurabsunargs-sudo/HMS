@@ -11,14 +11,25 @@ export const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  const encryptedToken = Cookies.get('hms-token')
+  // List of public endpoints that don't require authentication
+  const publicEndpoints = ['/doctors/public', '/auth/login', '/auth/register']
 
-  if (encryptedToken) {
-    try {
-      const token = decryptData(encryptedToken) as string
-      config.headers.Authorization = `Bearer ${token}`
-    } catch (error) {
-      console.error('Token decryption failed:', error)
+  // Check if the current request is to a public endpoint
+  const isPublicEndpoint = publicEndpoints.some((endpoint) =>
+    config.url?.includes(endpoint)
+  )
+
+  // Only add auth header for non-public endpoints
+  if (!isPublicEndpoint) {
+    const encryptedToken = Cookies.get('hms-token')
+
+    if (encryptedToken) {
+      try {
+        const token = decryptData(encryptedToken) as string
+        config.headers.Authorization = `Bearer ${token}`
+      } catch (error) {
+        console.error('Token decryption failed:', error)
+      }
     }
   }
 

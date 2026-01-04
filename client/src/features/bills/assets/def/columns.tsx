@@ -62,6 +62,7 @@ export const columns: ColumnDef<Bill>[] = [
         {row.original.patient?.patientId || 'N/A'}
       </div>
     ),
+    initialHidden: true,
   },
 
   {
@@ -86,18 +87,6 @@ export const columns: ColumnDef<Bill>[] = [
         </div>
       )
     },
-  },
-
-  {
-    accessorKey: 'totalAmount',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Amount' />
-    ),
-    cell: ({ row }) => (
-      <div className='max-w-[100px] text-sm font-medium'>
-        ${row.original.totalAmount || '0'}
-      </div>
-    ),
   },
 
   {
@@ -191,15 +180,64 @@ export const columns: ColumnDef<Bill>[] = [
   },
 
   {
-    accessorKey: 'itemsCount',
+    accessorKey: 'paymentDetails',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Items' />
+      <DataTableColumnHeader column={column} title='Payment Details' />
     ),
-    cell: ({ row }) => (
-      <div className='max-w-[60px] text-center text-sm'>
-        {row.original.billItems?.length || 0}
-      </div>
-    ),
+    cell: ({ row }) => {
+      // Calculate admission charges
+      const admissionAmount = row.original.admission?.totalAmount
+        ? parseFloat(row.original.admission.totalAmount)
+        : 0
+
+      // Calculate bed charges if admission exists
+      let bedCharges = 0
+      if (row.original.admission && row.original.admission.bed) {
+        const pricePerDay =
+          parseFloat(row.original.admission.bed.pricePerDay) || 0
+        const admissionDate = new Date(row.original.admission.admissionDate)
+        const dischargeDate = row.original.admission.dischargeDate
+          ? new Date(row.original.admission.dischargeDate)
+          : new Date() // Use current date if not discharged
+
+        const daysDiff = Math.ceil(
+          (dischargeDate.getTime() - admissionDate.getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+        bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
+      }
+
+      // Calculate medical services (bill items)
+      const medicalServices =
+        row.original.billItems?.reduce((sum, item) => {
+          return sum + (item.totalPrice || 0)
+        }, 0) || 0
+
+      // Get bill amount
+      const billAmount = parseFloat(row.original.totalAmount) || 0
+
+      // Calculate comprehensive total
+      const totalAmount =
+        admissionAmount + bedCharges + medicalServices + billAmount
+
+      const payments = row.original.payments || []
+      const totalPaid = payments.reduce((sum, payment) => {
+        return sum + (parseFloat(payment.amount) || 0)
+      }, 0)
+      const remaining = totalAmount - totalPaid
+
+      return (
+        <div className='max-w-[140px] text-sm'>
+          <div className='font-medium'>Total: Rs. {totalAmount.toFixed(0)}</div>
+          <div className='text-green-600'>Paid: Rs. {totalPaid.toFixed(0)}</div>
+          <div
+            className={`${remaining > 0 ? 'text-red-600' : 'text-green-600'}`}
+          >
+            Balance: Rs. {remaining.toFixed(0)}
+          </div>
+        </div>
+      )
+    },
   },
 
   {

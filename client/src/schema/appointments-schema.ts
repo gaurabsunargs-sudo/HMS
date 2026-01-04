@@ -8,7 +8,7 @@ export interface Appointment {
   doctorId: string
   dateTime: string
   duration: string
-  status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+  status: 'PENDING' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED' | 'NO_SHOW'
   reason: string
   notes?: string | null
   createdAt: string
@@ -42,7 +42,7 @@ export interface CreateAppointmentRequest {
 
 export interface UpdateAppointmentRequest {
   dateTime?: string
-  status?: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+  status?: 'PENDING' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'REJECTED' | 'NO_SHOW'
   reason?: string
   notes?: string
 }

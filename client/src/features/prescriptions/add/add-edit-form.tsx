@@ -131,10 +131,6 @@ const PrescriptionForm = ({
             toast.success('Prescription updated successfully!')
             navigate({ to: '/dashboard/prescriptions' })
           },
-          onError: (error) => {
-            console.error('Failed to update prescription:', error)
-            toast.error('Failed to update prescription')
-          },
         }
       )
     } else {
@@ -142,10 +138,6 @@ const PrescriptionForm = ({
         onSuccess: () => {
           toast.success('Prescription created successfully!')
           navigate({ to: '/dashboard/prescriptions' })
-        },
-        onError: (error) => {
-          console.error('Failed to create prescription:', error)
-          toast.error('Failed to create prescription')
         },
       })
     }

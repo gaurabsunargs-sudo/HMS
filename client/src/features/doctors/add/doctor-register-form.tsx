@@ -73,10 +73,6 @@ const DoctorRegisterForm = () => {
         toast.success('Doctor registered successfully!')
         navigate({ to: '/dashboard/doctors' })
       },
-      onError: (error) => {
-        console.error('Failed to register doctor:', error)
-        toast.error('Failed to register doctor')
-      },
     })
   }
 

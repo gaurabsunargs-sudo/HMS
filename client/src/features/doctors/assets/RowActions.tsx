@@ -58,7 +58,6 @@ export function DataTableRowActions<TData extends { id: string }>({
       toast.success('Doctor deleted successfully!')
       handleCloseDeleteModal()
     } catch (error) {
-      toast.error('Error deleting doctor')
       console.error('Error deleting doctor:', error)
     } finally {
       setIsLoading(false)
