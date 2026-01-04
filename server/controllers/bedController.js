@@ -97,10 +97,26 @@ const deleteBed = async (req, res) => {
   }
 };
 
+const getAllBedsSelect = async (req, res) => {
+  try {
+    const items = await prisma.Bed.findMany({
+      orderBy: { bedNumber: 'asc' }
+    });
+
+    res.json(formatResponse(true, 'Beds retrieved successfully', items, {
+      total: items.length
+    }));
+  } catch (error) {
+    console.error('Get Beds error:', error);
+    res.status(500).json(formatResponse(false, 'Failed to retrieve Beds'));
+  }
+};
+
 module.exports = {
   getAllBeds,
   getBedById,
   createBed,
   updateBed,
-  deleteBed
+  deleteBed,
+  getAllBedsSelect
 };

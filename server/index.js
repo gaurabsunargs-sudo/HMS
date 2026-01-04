@@ -12,22 +12,33 @@ const prisma = new PrismaClient({ log: [] });
 const app = express();
 const server = http.createServer(app);
 
-// Minimal CORS configuration
+// CORS configuration
 const corsOptions = {
   origin: process.env.ALLOWED_ORIGINS?.split(",") || [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
   ],
   credentials: true,
-  methods: ["GET", "POST", "OPTIONS"]
+  methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+    "Cache-Control",
+    "Pragma",
+  ],
+  exposedHeaders: ["Authorization"],
+  maxAge: 86400, // 24 hours
 };
 
 // Socket.IO with minimal config
 const io = socketIo(server, {
   cors: corsOptions,
-  transports: ["websocket"]
+  transports: ["websocket"],
 });
 
 const onlineUsers = new Map();
@@ -38,9 +49,30 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Static files with minimal headers
-app.use("/uploads", express.static("uploads"));
-app.use("/storage", express.static("storage"));
+// Static files with CORS headers and proper headers
+app.use(
+  "/uploads",
+  cors(corsOptions),
+  (req, res, next) => {
+    res.header("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static("uploads")
+);
+
+app.use(
+  "/storage",
+  cors(corsOptions),
+  (req, res, next) => {
+    res.header("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static("storage")
+);
+
+// Handle preflight OPTIONS requests for static files
+app.options("/uploads/*", cors(corsOptions));
+app.options("/storage/*", cors(corsOptions));
 
 // Route imports (consolidate if possible)
 const routes = [
@@ -57,7 +89,7 @@ const routes = [
   { path: "/api/payments", route: require("./routes/payments") },
   { path: "/api/chat", route: require("./routes/chat") },
   { path: "/api/dashboard", route: require("./routes/dashboard") },
-  { path: "/api/ai", route: require("./routes/predictions") }
+  { path: "/api/ai", route: require("./routes/predictions") },
 ];
 
 // Register all routes
@@ -84,12 +116,12 @@ const socketEvents = {
 
         const message = await prisma.chatMessage.create({
           data: { senderId, receiverId, content: encryptedContent },
-          include: { sender: true, receiver: true }
+          include: { sender: true, receiver: true },
         });
 
         const decryptedMessage = {
           ...message,
-          content: decryptMessage(message.content)
+          content: decryptMessage(message.content),
         };
 
         socket.emit("message-sent", decryptedMessage);
@@ -103,14 +135,14 @@ const socketEvents = {
     socket.on("typing-start", (data) => {
       socket.to(`user_${data.receiverId}`).emit("user-typing", {
         userId: data.senderId,
-        typing: true
+        typing: true,
       });
     });
 
     socket.on("typing-stop", (data) => {
       socket.to(`user_${data.receiverId}`).emit("user-typing", {
         userId: data.senderId,
-        typing: false
+        typing: false,
       });
     });
 
@@ -119,9 +151,11 @@ const socketEvents = {
         const { senderId, receiverId } = data;
         await prisma.chatMessage.updateMany({
           where: { senderId, receiverId, isRead: false },
-          data: { isRead: true }
+          data: { isRead: true },
         });
-        socket.to(`user_${senderId}`).emit("messages-read", { readerId: receiverId });
+        socket
+          .to(`user_${senderId}`)
+          .emit("messages-read", { readerId: receiverId });
       } catch (error) {
         console.error("Mark messages read error:", error);
       }
@@ -134,7 +168,7 @@ const socketEvents = {
         io.emit("user-offline", { userId: socket.userId });
       }
     });
-  }
+  },
 };
 
 // Register socket events
@@ -145,12 +179,12 @@ Object.entries(socketEvents).forEach(([event, handler]) => {
 // Helper function
 async function updateUserStatus(userId, isOnline) {
   try {
-    await prisma.user.update({
+    await prisma.user.updateMany({
       where: { id: userId },
       data: {
         isCurrentlyOnline: isOnline,
-        lastSeen: isOnline ? null : new Date()
-      }
+        lastSeen: isOnline ? null : new Date(),
+      },
     });
   } catch (error) {
     console.error("Update user status error:", error);
@@ -162,7 +196,7 @@ app.use((error, req, res, next) => {
   console.error(error);
   res.status(error.status || 500).json({
     success: false,
-    message: error.message || "Internal server error"
+    message: error.message || "Internal server error",
   });
 });
 
@@ -170,7 +204,7 @@ app.use((error, req, res, next) => {
 app.use("*", (req, res) => {
   res.status(404).json({
     success: false,
-    message: "Route not found"
+    message: "Route not found",
   });
 });
 

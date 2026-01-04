@@ -8,28 +8,28 @@ datasource db {
 }
 
 model User {
-  id                String        @id @default(cuid())
-  username          String        @unique
-  email             String        @unique
-  password          String
-  firstName         String
-  middleName        String?
-  lastName          String
-  profile           String?
-  role              UserRole      @default(PATIENT)
-  isActive          Boolean       @default(true)
-  isCurrentlyOnline Boolean       @default(false)
-  lastSeen          DateTime?
-  resetPasswordToken String?
+  id                   String        @id @default(cuid())
+  username             String        @unique
+  email                String        @unique
+  password             String
+  firstName            String
+  middleName           String?
+  lastName             String
+  profile              String?
+  role                 UserRole      @default(PATIENT)
+  isActive             Boolean       @default(true)
+  isCurrentlyOnline    Boolean       @default(false)
+  lastSeen             DateTime?
+  resetPasswordToken   String?
   resetPasswordExpires DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  adminProfile      AdminProfile?
-  receivedMessages  ChatMessage[] @relation("MessageReceiver")
-  sentMessages      ChatMessage[] @relation("MessageSender")
-  doctor            Doctor?
-  patient           Patient?
-  testimonials      Testimonial[]
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  adminProfile         AdminProfile?
+  receivedMessages     ChatMessage[] @relation("MessageReceiver")
+  sentMessages         ChatMessage[] @relation("MessageSender")
+  doctor               Doctor?
+  patient              Patient?
+  testimonials         Testimonial[]
 
   @@map("users")
 }
@@ -100,7 +100,7 @@ model Appointment {
   dateTime  DateTime
   duration  Int               @default(30)
   reason    String
-  status    AppointmentStatus @default(SCHEDULED)
+  status    AppointmentStatus @default(PENDING)
   notes     String?
   createdAt DateTime          @default(now())
   doctor    Doctor            @relation(fields: [doctorId], references: [id])
@@ -204,26 +204,20 @@ model BillItem {
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  billId        String
-  bill          Bill          @relation(fields: [billId], references: [id])
-
-  amount        Decimal
-  paymentMethod PaymentMethod
-  paymentDate   DateTime      @default(now())
-  notes         String?
-
-  // Cash-specific
-  receivedBy    String?       // staff/cashier id or name
-  receiptNo     String?       // for printed receipt tracking
-
-  // Bank-specific
-  bankName          String?   // Nabil, NIC Asia, etc.
-  transactionId     String?   // reference/UTR number from bank
-  cardLast4         String?   // if card used (only last 4 digits)
-  authorizationCode String?   // from POS machine
-
-  createdAt     DateTime      @default(now())
+  id                String        @id @default(cuid())
+  billId            String
+  amount            Decimal
+  paymentMethod     PaymentMethod
+  paymentDate       DateTime      @default(now())
+  notes             String?
+  receivedBy        String?
+  receiptNo         String?
+  bankName          String?
+  transactionId     String?
+  cardLast4         String?
+  authorizationCode String?
+  createdAt         DateTime      @default(now())
+  bill              Bill          @relation(fields: [billId], references: [id])
 
   @@map("payments")
 }
@@ -243,14 +237,14 @@ model ChatMessage {
 }
 
 model Testimonial {
-  id        String   @id @default(cuid())
-  userId    String
-  content   String
-  rating    Int      @default(5)
-  isApproved Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  userId     String
+  content    String
+  rating     Int      @default(5)
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("testimonials")
 }
@@ -287,6 +281,8 @@ enum AppointmentStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
+  PENDING
+  REJECTED
 }
 
 enum AdmissionStatus {
@@ -300,7 +296,7 @@ enum BillStatus {
   PARTIAL
   PAID
   OVERDUE
-}  
+}
 
 enum PaymentMethod {
   CASH

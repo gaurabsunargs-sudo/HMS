@@ -104,23 +104,55 @@ const updateUserPassword = async (req, res) => {
   try {
     const { id } = req.params;
     const { password } = req.body;
-    const adminUser = req.user; // The admin making the request
+    const currentUser = req.user; // The user making the request
 
-    // Validate password
-    if (!password || password.length < 6) {
+    // Check if user is updating their own password or if they're an admin
+    const isSelfUpdate = currentUser.id === id;
+    const isAdmin = currentUser.role === "ADMIN";
+
+    if (!isSelfUpdate && !isAdmin) {
+      return res
+        .status(403)
+        .json(
+          formatResponse(
+            false,
+            "Access denied. You can only update your own password or you must be an admin"
+          )
+        );
+    }
+
+    // Validate request body
+    if (!password) {
+      return res
+        .status(400)
+        .json(formatResponse(false, "Password is required"));
+    }
+
+    // Validate password strength
+    if (password.trim().length < 6) {
       return res
         .status(400)
         .json(formatResponse(false, "Password must be at least 6 characters"));
     }
 
     // Check if user exists
-    const existingUser = await prisma.user.findUnique({ where: { id } });
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        isActive: true,
+      },
+    });
+
     if (!existingUser) {
       return res.status(404).json(formatResponse(false, "User not found"));
     }
 
     // Hash the new password
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(password.trim());
 
     // Update user password
     const user = await prisma.user.update({
@@ -131,23 +163,29 @@ const updateUserPassword = async (req, res) => {
         username: true,
         email: true,
         firstName: true,
+        middleName: true,
         lastName: true,
         role: true,
         isActive: true,
+        profile: true,
         updatedAt: true,
       },
     });
 
     // Log the password change for security
-    console.log(
-      `🔐 Admin ${adminUser.username} (ID: ${
-        adminUser.id
-      }) updated password for user ${
-        existingUser.username
-      } (ID: ${id}) at ${new Date().toISOString()}`
-    );
+    const logMessage = isSelfUpdate
+      ? `🔐 User ${currentUser.username} (ID: ${
+          currentUser.id
+        }) updated their own password at ${new Date().toISOString()}`
+      : `🔐 Admin ${currentUser.username} (ID: ${
+          currentUser.id
+        }) updated password for user ${
+          existingUser.username
+        } (ID: ${id}) at ${new Date().toISOString()}`;
 
-    res.json(formatResponse(true, "User password updated successfully", user));
+    console.log(logMessage);
+
+    res.json(formatResponse(true, "Password updated successfully", user));
   } catch (error) {
     console.error("Update user password error:", error);
     const { status, message } = handlePrismaError(error);

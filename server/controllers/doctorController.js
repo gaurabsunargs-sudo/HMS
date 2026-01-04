@@ -233,18 +233,8 @@ const getAllDoctorsPublic = async (req, res) => {
 
 const getAllDoctorsSelect = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 10,
-      specialization,
-      available,
-      search,
-    } = req.query;
+    const { specialization, available, search } = req.query;
     const { role, doctor } = req.user;
-
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
-    const skip = (pageNum - 1) * limitNum;
 
     let where = {};
 
@@ -294,8 +284,6 @@ const getAllDoctorsSelect = async (req, res) => {
     const [doctors, total] = await Promise.all([
       prisma.doctor.findMany({
         where,
-        skip,
-        take: limitNum,
         include: {
           user: {
             select: {
@@ -326,12 +314,7 @@ const getAllDoctorsSelect = async (req, res) => {
       "Doctors retrieved successfully",
       doctors,
       {
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total,
-          pages: Math.ceil(total / limitNum),
-        },
+        total,
       }
     );
 
@@ -649,8 +632,7 @@ const toggleDoctorAvailability = async (req, res) => {
     res.json(
       formatResponse(
         true,
-        `Doctor availability ${
-          updatedDoctor.isAvailable ? "enabled" : "disabled"
+        `Doctor availability ${updatedDoctor.isAvailable ? "enabled" : "disabled"
         }`,
         updatedDoctor
       )

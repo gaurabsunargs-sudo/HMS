@@ -203,7 +203,11 @@ const getBillById = async (req, res) => {
             },
           },
         },
-        admission: true,
+        admission: {
+          include: {
+            bed: true,
+          },
+        },
         billItems: true,
         payments: true,
       },

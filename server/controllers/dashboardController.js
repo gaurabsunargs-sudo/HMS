@@ -3,6 +3,118 @@ const { formatResponse } = require("../utils/helpers");
 
 const getStats = async (req, res) => {
   try {
+    const { role, doctor, patient } = req.user;
+
+    // PATIENT Dashboard Stats
+    if (role === "PATIENT") {
+      const patientId = patient.id;
+      const [
+        totalAppointments,
+        pendingBillsCount,
+        recentAppointments,
+        totalMedicalRecords,
+      ] = await Promise.all([
+        prisma.appointment.count({ where: { patientId } }),
+        prisma.bill.count({
+          where: {
+            patientId,
+            status: { in: ["PENDING", "OVERDUE", "PARTIAL"] },
+          },
+        }),
+        prisma.appointment.findMany({
+          where: { patientId },
+          orderBy: { dateTime: "desc" },
+          take: 5,
+          include: {
+            doctor: {
+              include: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+        }),
+        prisma.medicalRecord.count({ where: { patientId } }),
+      ]);
+
+      const data = {
+        totalAppointments,
+        pendingBills: pendingBillsCount,
+        recentAppointments,
+        totalMedicalRecords,
+        totalPatients: 0,
+        totalDoctors: 0,
+        totalRevenue: 0,
+        todayAppointments: 0,
+        occupiedBeds: 0,
+        totalBeds: 0,
+        monthlyRevenue: [],
+        departmentStats: [],
+      };
+      return res.json(
+        formatResponse(true, "Patient dashboard stats fetched", data)
+      );
+    }
+
+
+    // DOCTOR Dashboard Stats
+    if (role === "DOCTOR") {
+      const doctorId = doctor.id;
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+
+      const [
+        totalPatients,
+        totalAppointments,
+        todayAppointments,
+        recentAppointments,
+      ] = await Promise.all([
+        prisma.appointment
+          .groupBy({
+            by: ["patientId"],
+            where: { doctorId },
+            _count: { patientId: true },
+          })
+          .then((res) => res.length),
+        prisma.appointment.count({ where: { doctorId } }),
+        prisma.appointment.count({
+          where: {
+            doctorId,
+            dateTime: { gte: startOfToday, lte: endOfToday },
+          },
+        }),
+        prisma.appointment.findMany({
+          where: { doctorId },
+          orderBy: { dateTime: "desc" },
+          take: 5,
+          include: {
+            patient: {
+              include: {
+                user: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+        }),
+      ]);
+
+      const data = {
+        totalPatients,
+        totalAppointments,
+        todayAppointments,
+        recentAppointments,
+        totalDoctors: 0,
+        totalRevenue: 0,
+        occupiedBeds: 0,
+        totalBeds: 0,
+        pendingBills: 0,
+        monthlyRevenue: [],
+        departmentStats: [],
+      };
+      return res.json(formatResponse(true, "Doctor dashboard stats fetched", data));
+    }
+
+    // ADMIN Dashboard Stats (Default)
     const [
       totalPatients,
       totalDoctors,
@@ -29,14 +141,12 @@ const getStats = async (req, res) => {
       where: { dateTime: { gte: startOfToday, lte: endOfToday } },
     });
 
-    // Monthly revenue (last 12 months)
     const now = new Date();
     const months = [...Array(12)].map((_, i) => {
       const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
       return { y: d.getFullYear(), m: d.getMonth() + 1 };
     });
 
-    // Fetch bill totals and payments to compute revenue per month
     const bills = await prisma.bill.findMany({
       where: {
         createdAt: { gte: new Date(now.getFullYear(), now.getMonth() - 11, 1) },
@@ -69,7 +179,6 @@ const getStats = async (req, res) => {
       return { month: `${y}-${String(m).padStart(2, "0")}`, revenue };
     });
 
-    // Department stats (by ward as proxy)
     const wards = await prisma.bed.groupBy({
       by: ["ward"],
       _count: { ward: true },
@@ -114,8 +223,14 @@ const getStats = async (req, res) => {
   }
 };
 
+
 const getRevenueTrends = async (req, res) => {
   try {
+    const { role } = req.user;
+    if (role !== "ADMIN") {
+      return res.json(formatResponse(true, "Revenue trends fetched", []));
+    }
+
     const { period = "30d" } = req.query;
     const days = period.endsWith("d") ? parseInt(period) : 30;
     const start = new Date();

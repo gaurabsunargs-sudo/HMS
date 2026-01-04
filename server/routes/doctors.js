@@ -18,10 +18,10 @@ const { auth, authorize } = require("../middleware/auth");
 const router = express.Router();
 
 router.get("/public", getAllDoctorsPublic);
+router.get("/", getAllDoctors);
 
 router.use(auth);
 
-router.get("/", getAllDoctors);
 router.get("/select", getAllDoctorsSelect);
 
 router.get("/:id", getDoctorById);

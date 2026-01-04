@@ -18,12 +18,7 @@ router.use(auth); // All routes require authentication
 router.get("/", auth, getAllAppointments);
 router.get("/filter", getAppointmentsByFilter);
 router.get("/:id", getAppointmentById);
-router.post(
-  "/",
-  authorize("ADMIN", "DOCTOR"),
-  createAppointmentValidation,
-  createAppointment
-);
+router.post("/", createAppointmentValidation, createAppointment);
 router.put(
   "/:id",
   authorize("ADMIN", "DOCTOR"),

@@ -106,10 +106,18 @@ const getAllAppointments = async (req, res) => {
       prisma.appointment.count({ where }),
     ]);
 
+    const now = new Date();
+    const processedItems = items.map((item) => {
+      if (new Date(item.dateTime) < now && item.status === "SCHEDULED") {
+        return { ...item, status: "COMPLETED" };
+      }
+      return item;
+    });
+
     res.json({
       success: true,
       message: "Appointments retrieved successfully",
-      data: items,
+      data: processedItems,
       meta: {
         pagination: {
           page: parseInt(page),
@@ -164,6 +172,10 @@ const getAppointmentById = async (req, res) => {
       return res
         .status(404)
         .json(formatResponse(false, "Appointment not found"));
+    }
+
+    if (new Date(item.dateTime) < new Date() && item.status === "SCHEDULED") {
+      item.status = "COMPLETED";
     }
 
     res.json(formatResponse(true, "Appointment retrieved successfully", item));
@@ -275,6 +287,13 @@ const createAppointment = async (req, res) => {
       return res.status(404).json(formatResponse(false, "Doctor not found"));
     }
 
+    // Check if appointment date is in the past
+    if (new Date(dateTime) < new Date()) {
+      return res
+        .status(400)
+        .json(formatResponse(false, "Cannot book appointments in the past"));
+    }
+
     // Check if doctor is available
     if (!doctor.isAvailable) {
       return res
@@ -374,11 +393,25 @@ const updateAppointment = async (req, res) => {
         .json(formatResponse(false, "Appointment not found"));
     }
 
+    // Check if appointment time has passed
+    if (new Date(existingAppointment.dateTime) < new Date()) {
+      return res
+        .status(400)
+        .json(formatResponse(false, "Time exceeded. Cannot update past appointments."));
+    }
+
     // If updating time-related fields, check for conflicts
     if (dateTime || duration) {
+      const checkDateTime = dateTime || existingAppointment.dateTime;
+
+      if (new Date(checkDateTime) < new Date()) {
+        return res
+          .status(400)
+          .json(formatResponse(false, "Cannot set appointment to a past time"));
+      }
+
       const checkPatientId = patientId || existingAppointment.patientId;
       const checkDoctorId = doctorId || existingAppointment.doctorId;
-      const checkDateTime = dateTime || existingAppointment.dateTime;
       const checkDuration = duration || existingAppointment.duration;
 
       const hasConflict = await checkForConflictingAppointments(
@@ -612,7 +645,7 @@ const updateAppointmentValidation = [
   body("reason").optional().notEmpty().withMessage("Reason cannot be empty"),
   body("status")
     .optional()
-    .isIn(["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"])
+    .isIn(["PENDING", "SCHEDULED", "COMPLETED", "CANCELLED", "REJECTED", "NO_SHOW"])
     .withMessage("Invalid status"),
 ];
 
