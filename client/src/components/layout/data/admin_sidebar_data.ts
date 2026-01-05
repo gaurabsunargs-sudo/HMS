@@ -14,8 +14,6 @@ import {
   CreditCard,
   PlusCircle,
   Brain,
-  History,
-  Activity,
 } from 'lucide-react'
 import { SidebarData } from '../types'
 

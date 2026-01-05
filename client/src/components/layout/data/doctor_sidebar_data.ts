@@ -8,8 +8,8 @@ import {
   PlusCircle,
   Bed,
   Brain,
-  History,
   Notebook,
+  Building2,
 } from 'lucide-react'
 import { SidebarData } from '../types'
 
@@ -81,7 +81,10 @@ export const doctorSidebar: SidebarData = {
 
     {
       title: 'Hospital Resources',
-      items: [{ title: 'Beds', url: '/dashboard/beds', icon: Bed }],
+      items: [{ title: 'Beds', url: '/dashboard/beds', icon: Bed },
+      { title: 'Admissions', url: '/dashboard/admissions', icon: Building2 },
+
+      ],
     },
 
     {
