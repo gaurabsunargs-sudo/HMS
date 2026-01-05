@@ -1,4 +1,4 @@
-﻿const { body, validationResult } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 const prisma = require("../config/database");
 const { formatResponse, handlePrismaError } = require("../utils/helpers");
 
@@ -38,56 +38,13 @@ const getAllBills = async (req, res) => {
 
     // Apply role-based filtering
     if (role === "DOCTOR") {
-      if (doctor && doctor.id) {
-        // Doctor can see bills for patients they have treated (through appointments or admissions)
-        const doctorAppointments = await prisma.appointment.findMany({
-          where: { doctorId: doctor.id },
-          select: { patientId: true },
-          distinct: ["patientId"],
-        });
-
-        const doctorAdmissions = await prisma.admission.findMany({
-          where: { doctorId: doctor.id },
-          select: { patientId: true },
-          distinct: ["patientId"],
-        });
-
-        const patientIds = [
-          ...doctorAppointments.map((app) => app.patientId),
-          ...doctorAdmissions.map((adm) => adm.patientId),
-        ].filter((id, index, array) => array.indexOf(id) === index); // Remove duplicates
-
-        if (patientIds.length > 0) {
-          where.patientId = { in: patientIds };
-        } else {
-          // If doctor has no patients, return empty array
-          return res.json(
-            formatResponse(true, "Bills retrieved successfully", [], {
-              pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total: 0,
-                pages: 0,
-              },
-            })
-          );
-        }
-      } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Doctor profile not found.",
-        });
-      }
+      // Doctor can see bills for patients they have treated (through appointments or admissions)
+      where.OR = [
+        { patient: { appointments: { some: { doctor: { userId: req.user.id } } } } },
+        { patient: { admissions: { some: { doctor: { userId: req.user.id } } } } }
+      ];
     } else if (role === "PATIENT") {
-      if (patient && patient.id) {
-        where.patientId = patient.id;
-        console.log("Filtering by patientId:", patient.id);
-      } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Patient profile not found.",
-        });
-      }
+      where.patient = { userId: req.user.id };
     }
     // For ADMIN role, no filtering is applied (can see all bills)
 

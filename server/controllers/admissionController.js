@@ -12,27 +12,9 @@ const getAllAdmissions = async (req, res) => {
 
     // Apply role-based filtering
     if (role === "DOCTOR") {
-      if (doctor && doctor.id) {
-        // Doctor can see admissions where they are the assigned doctor
-        // Check if doctorId field exists in Admission model
-        where.doctorId = doctor.id;
-        console.log("Filtering by doctorId:", doctor.id);
-      } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Doctor profile not found.",
-        });
-      }
+      where.doctor = { userId: req.user.id };
     } else if (role === "PATIENT") {
-      if (patient && patient.id) {
-        where.patientId = patient.id;
-        console.log("Filtering by patientId:", patient.id);
-      } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Patient profile not found.",
-        });
-      }
+      where.patient = { userId: req.user.id };
     }
     // For ADMIN role, no filtering is applied (can see all admissions)
 
@@ -91,6 +73,17 @@ const getAllAdmissions = async (req, res) => {
             },
           },
           bed: true,
+          doctor: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                },
+              },
+            },
+          },
           bills: {
             include: { payments: true },
           },
@@ -130,6 +123,17 @@ const getAdmissionById = async (req, res) => {
           },
         },
         bed: true,
+        doctor: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                middleName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
         bills: {
           include: { payments: true, billItems: true },
           orderBy: { createdAt: "desc" },
@@ -151,7 +155,13 @@ const getAdmissionById = async (req, res) => {
 
 const createAdmission = async (req, res) => {
   try {
-    const { patientId, userId, bedId, ...rest } = req.body;
+    const { patientId, bedId, ...rest } = req.body;
+    const { role, doctor: doctorProfile } = req.user;
+
+    let doctorId = rest.doctorId || null;
+    if (role === "DOCTOR" && doctorProfile) {
+      doctorId = doctorProfile.id;
+    }
 
     // Check patient
     if (patientId) {
@@ -165,15 +175,6 @@ const createAdmission = async (req, res) => {
       }
     }
 
-    // Check user
-    if (userId) {
-      const user = await prisma.User.findUnique({ where: { id: userId } });
-      if (!user) {
-        return res
-          .status(400)
-          .json(formatResponse(false, "Invalid userId: User not found"));
-      }
-    }
 
     // Check bed
     if (bedId) {
@@ -189,7 +190,7 @@ const createAdmission = async (req, res) => {
     const item = await prisma.$transaction(async (tx) => {
       if (!bedId) {
         return await tx.Admission.create({
-          data: { patientId, userId, bedId, ...rest },
+          data: { patientId, doctorId, bedId, ...rest },
         });
       }
 
@@ -202,7 +203,13 @@ const createAdmission = async (req, res) => {
       }
 
       const created = await tx.Admission.create({
-        data: { patientId, userId, bedId, ...rest, status: "ADMITTED" },
+        data: {
+          patientId,
+          doctorId,
+          bedId,
+          ...rest,
+          status: "ADMITTED",
+        },
       });
 
       await tx.Bed.update({ where: { id: bedId }, data: { isOccupied: true } });
@@ -223,7 +230,7 @@ const createAdmission = async (req, res) => {
 const updateAdmission = async (req, res) => {
   try {
     const { id } = req.params;
-    const { patientId, userId, bedId, ...rest } = req.body;
+    const { patientId, bedId, ...rest } = req.body;
 
     // Check admission exists first
     const admission = await prisma.Admission.findUnique({ where: { id } });
@@ -243,14 +250,6 @@ const updateAdmission = async (req, res) => {
       }
     }
 
-    if (userId) {
-      const user = await prisma.User.findUnique({ where: { id: userId } });
-      if (!user) {
-        return res
-          .status(400)
-          .json(formatResponse(false, "Invalid userId: User not found"));
-      }
-    }
 
     if (bedId) {
       const bed = await prisma.Bed.findUnique({ where: { id: bedId } });

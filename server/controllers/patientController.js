@@ -7,21 +7,33 @@ const getAllPatients = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "" } = req.query;
     const skip = (page - 1) * limit;
-    const { role, doctor } = req.user;
+    const { role, doctor, patient } = req.user;
 
     let where = {};
 
     // Apply role-based filtering
     if (role === "DOCTOR") {
       if (doctor && doctor.id) {
-        // Doctor can only see patients assigned to them (through appointments)
-        const doctorAppointments = await prisma.appointment.findMany({
-          where: { doctorId: doctor.id },
-          select: { patientId: true },
-          distinct: ["patientId"],
-        });
+        // Doctor can only see patients assigned to them (through appointments or medical records)
+        const [doctorAppointments, doctorRecords] = await Promise.all([
+          prisma.appointment.findMany({
+            where: { doctorId: doctor.id },
+            select: { patientId: true },
+            distinct: ["patientId"],
+          }),
+          prisma.medicalRecord.findMany({
+            where: { doctorId: doctor.id },
+            select: { patientId: true },
+            distinct: ["patientId"],
+          }),
+        ]);
 
-        const patientIds = doctorAppointments.map((app) => app.patientId);
+        const patientIds = Array.from(
+          new Set([
+            ...doctorAppointments.map((app) => app.patientId),
+            ...doctorRecords.map((rec) => rec.patientId),
+          ])
+        );
 
         if (patientIds.length > 0) {
           where.id = { in: patientIds };
@@ -38,11 +50,13 @@ const getAllPatients = async (req, res) => {
             })
           );
         }
+      }
+    } else if (role === "PATIENT") {
+      // Patient can only see their own profile
+      if (patient && patient.id) {
+        where.id = patient.id;
       } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Doctor profile not found.",
-        });
+        where.userId = req.user.id;
       }
     }
     // For ADMIN role, no filtering is applied (can see all patients)
@@ -120,13 +134,40 @@ const getAllPatientsDropdown = async (req, res) => {
 
     let where = {};
     if (role === "PATIENT") {
+      // Patient can only see their own profile
       if (patient && patient.id) {
-        // Patient can only see themselves
         where.id = patient.id;
+      } else {
+        where.userId = req.user.id;
+      }
+    } else if (role === "DOCTOR") {
+      if (doctor && doctor.id) {
+        // Doctor can only see patients assigned to them (through appointments or medical records)
+        const [doctorAppointments, doctorRecords] = await Promise.all([
+          prisma.appointment.findMany({
+            where: { doctorId: doctor.id },
+            select: { patientId: true },
+            distinct: ["patientId"],
+          }),
+          prisma.medicalRecord.findMany({
+            where: { doctorId: doctor.id },
+            select: { patientId: true },
+            distinct: ["patientId"],
+          }),
+        ]);
+
+        const patientIds = Array.from(
+          new Set([
+            ...doctorAppointments.map((app) => app.patientId),
+            ...doctorRecords.map((rec) => rec.patientId),
+          ])
+        );
+
+        where.id = { in: patientIds };
       } else {
         return res.status(403).json({
           success: false,
-          message: "Access denied. Patient profile not found.",
+          message: "Access denied. Doctor profile not found.",
         });
       }
     }

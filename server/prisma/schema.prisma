@@ -52,6 +52,7 @@ model Doctor {
   qualifications  String[]
   consultationFee Decimal
   isAvailable     Boolean         @default(true)
+  admissions      Admission[]
   appointments    Appointment[]
   user            User            @relation(fields: [userId], references: [id])
   medicalRecords  MedicalRecord[]
@@ -119,7 +120,9 @@ model Admission {
   status        AdmissionStatus @default(ADMITTED)
   totalAmount   Decimal?
   createdAt     DateTime        @default(now())
+  doctorId      String?
   bed           Bed             @relation(fields: [bedId], references: [id])
+  doctor        Doctor?         @relation(fields: [doctorId], references: [id])
   patient       Patient         @relation(fields: [patientId], references: [id])
   bills         Bill[]
 

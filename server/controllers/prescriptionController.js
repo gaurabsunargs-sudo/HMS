@@ -32,25 +32,9 @@ const getAllPrescriptions = async (req, res) => {
 
     // Apply role-based filtering
     if (role === "DOCTOR") {
-      if (doctor && doctor.id) {
-        where.doctorId = doctor.id;
-        console.log("Filtering by doctorId:", doctor.id);
-      } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Doctor profile not found.",
-        });
-      }
+      where.doctor = { userId: req.user.id };
     } else if (role === "PATIENT") {
-      if (patient && patient.id) {
-        where.patientId = patient.id;
-        console.log("Filtering by patientId:", patient.id);
-      } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Patient profile not found.",
-        });
-      }
+      where.patient = { userId: req.user.id };
     }
     // For ADMIN role, no filtering is applied (can see all prescriptions)
 
@@ -298,15 +282,13 @@ const createPrescription = async (req, res) => {
       ...item,
       patient: {
         ...item.patient,
-        name: `${item.patient.user.firstName} ${
-          item.patient.user.middleName || ""
-        } ${item.patient.user.lastName}`.trim(),
+        name: `${item.patient.user.firstName} ${item.patient.user.middleName || ""
+          } ${item.patient.user.lastName}`.trim(),
       },
       doctor: {
         ...item.doctor,
-        name: `${item.doctor.user.firstName} ${
-          item.doctor.user.middleName || ""
-        } ${item.doctor.user.lastName}`.trim(),
+        name: `${item.doctor.user.firstName} ${item.doctor.user.middleName || ""
+          } ${item.doctor.user.lastName}`.trim(),
       },
     };
 
@@ -402,15 +384,13 @@ const updatePrescription = async (req, res) => {
       ...item,
       patient: {
         ...item.patient,
-        name: `${item.patient.user.firstName} ${
-          item.patient.user.middleName || ""
-        } ${item.patient.user.lastName}`.trim(),
+        name: `${item.patient.user.firstName} ${item.patient.user.middleName || ""
+          } ${item.patient.user.lastName}`.trim(),
       },
       doctor: {
         ...item.doctor,
-        name: `${item.doctor.user.firstName} ${
-          item.doctor.user.middleName || ""
-        } ${item.doctor.user.lastName}`.trim(),
+        name: `${item.doctor.user.firstName} ${item.doctor.user.middleName || ""
+          } ${item.doctor.user.lastName}`.trim(),
       },
     };
 

@@ -28,25 +28,9 @@ const getAllMedicalRecords = async (req, res) => {
 
     // Apply role-based filtering
     if (role === "DOCTOR") {
-      if (doctor && doctor.id) {
-        where.doctorId = doctor.id;
-        console.log("Filtering by doctorId:", doctor.id);
-      } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Doctor profile not found.",
-        });
-      }
+      where.doctor = { userId: req.user.id };
     } else if (role === "PATIENT") {
-      if (patient && patient.id) {
-        where.patientId = patient.id;
-        console.log("Filtering by patientId:", patient.id);
-      } else {
-        return res.status(403).json({
-          success: false,
-          message: "Access denied. Patient profile not found.",
-        });
-      }
+      where.patient = { userId: req.user.id };
     }
     // For ADMIN role, no filtering is applied (can see all medical records)
 
@@ -329,16 +313,14 @@ const createMedicalRecord = async (req, res) => {
       updatedAt: medicalRecord.updatedAt,
       patient: {
         id: medicalRecord.patient.id,
-        name: `${medicalRecord.patient.user.firstName} ${
-          medicalRecord.patient.user.middleName || ""
-        } ${medicalRecord.patient.user.lastName}`.trim(),
+        name: `${medicalRecord.patient.user.firstName} ${medicalRecord.patient.user.middleName || ""
+          } ${medicalRecord.patient.user.lastName}`.trim(),
         email: medicalRecord.patient.user.email,
       },
       doctor: {
         id: medicalRecord.doctor.id,
-        name: `${medicalRecord.doctor.user.firstName} ${
-          medicalRecord.doctor.user.middleName || ""
-        } ${medicalRecord.doctor.user.lastName}`.trim(),
+        name: `${medicalRecord.doctor.user.firstName} ${medicalRecord.doctor.user.middleName || ""
+          } ${medicalRecord.doctor.user.lastName}`.trim(),
         email: medicalRecord.doctor.user.email,
         specialization: medicalRecord.doctor.specialization,
       },
@@ -427,16 +409,14 @@ const updateMedicalRecord = async (req, res) => {
       updatedAt: medicalRecord.updatedAt,
       patient: {
         id: medicalRecord.patient.id,
-        name: `${medicalRecord.patient.user.firstName} ${
-          medicalRecord.patient.user.middleName || ""
-        } ${medicalRecord.patient.user.lastName}`.trim(),
+        name: `${medicalRecord.patient.user.firstName} ${medicalRecord.patient.user.middleName || ""
+          } ${medicalRecord.patient.user.lastName}`.trim(),
         email: medicalRecord.patient.user.email,
       },
       doctor: {
         id: medicalRecord.doctor.id,
-        name: `${medicalRecord.doctor.user.firstName} ${
-          medicalRecord.doctor.user.middleName || ""
-        } ${medicalRecord.doctor.user.lastName}`.trim(),
+        name: `${medicalRecord.doctor.user.firstName} ${medicalRecord.doctor.user.middleName || ""
+          } ${medicalRecord.doctor.user.lastName}`.trim(),
         email: medicalRecord.doctor.user.email,
         specialization: medicalRecord.doctor.specialization,
       },

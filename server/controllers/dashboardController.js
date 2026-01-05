@@ -7,6 +7,11 @@ const getStats = async (req, res) => {
 
     // PATIENT Dashboard Stats
     if (role === "PATIENT") {
+      if (!patient) {
+        return res
+          .status(403)
+          .json(formatResponse(false, "Access denied. Patient profile not found."));
+      }
       const patientId = patient.id;
       const [
         totalAppointments,
@@ -58,6 +63,11 @@ const getStats = async (req, res) => {
 
     // DOCTOR Dashboard Stats
     if (role === "DOCTOR") {
+      if (!doctor) {
+        return res
+          .status(403)
+          .json(formatResponse(false, "Access denied. Doctor profile not found."));
+      }
       const doctorId = doctor.id;
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
