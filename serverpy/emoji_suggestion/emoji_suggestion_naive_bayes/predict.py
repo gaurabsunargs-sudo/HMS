@@ -8,6 +8,8 @@ MODEL_PATH = os.path.join(BASE_DIR, 'model.joblib')
 VECTORIZER_PATH = os.path.join(BASE_DIR, 'vectorizer.joblib')
 LABEL_ENCODER_PATH = os.path.join(BASE_DIR, 'label_mapping.joblib')
 
+from emoji_suggestion.emoji_config import preprocess_text
+
 _model = None
 _vectorizer = None
 _emoji_map = None
@@ -26,16 +28,6 @@ def load_model():
         _emoji_map = joblib.load(LABEL_ENCODER_PATH)
     
     return _model, _vectorizer, _emoji_map
-
-
-def preprocess_text(text: str) -> str:
-    """Preprocess text: lowercase, remove mentions and hashtags"""
-    if not text:
-        return ""
-    text = str(text).lower()
-    text = text.replace('@user', '')
-    text = text.replace('#', '')
-    return text.strip()
 
 
 def predict_emoji(text: str, top_n: int = 5) -> List[Dict]:
@@ -67,25 +59,3 @@ def predict_emoji(text: str, top_n: int = 5) -> List[Dict]:
         })
     
     return results
-
-
-# def predict_single_emoji(text: str) -> str:
-#     """Predict single best emoji for given text"""
-#     predictions = predict_emoji(text, top_n=1)
-#     if predictions:
-#         return predictions[0]["emoji"]
-#     return "❓"
-
-
-# if __name__ == "__main__":
-#     test_texts = [
-#         "I am so happy today!",
-#         "This is amazing and I love it",
-#         "Feeling sad and lonely"
-#     ]
-    
-#     for text in test_texts:
-#         predictions = predict_emoji(text, top_n=3)
-#         print(f"\n{text}")
-#         for i, pred in enumerate(predictions, 1):
-#             print(f"  {i}. {pred['emoji']} ({pred['probability']:.2%})")

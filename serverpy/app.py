@@ -6,9 +6,10 @@ import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+
+# Import modules
+from disease_prediction.train import train_disease_prediction_model
 
 # Import emoji suggestion module (Naive Bayes only)
 from emoji_suggestion.emoji_suggestion_naive_bayes import predict as nb_predict
@@ -77,42 +78,10 @@ def get_symptom_suggestions(selected_symptoms: List[str], limit: int = 10) -> Li
         return []
 
 
-def train_and_save_model():
-    if not os.path.exists(DATASET_PATH):
-        raise FileNotFoundError("Dataset not found")
-
-    df = pd.read_csv(DATASET_PATH)
-
-    if "prognosis" not in df.columns:
-        raise ValueError("Dataset must contain 'prognosis' column")
-
-    feature_columns = [c for c in df.columns if c != "prognosis"]
-
-    encoder = LabelEncoder() 
-    y = encoder.fit_transform(df["prognosis"].astype(str).str.strip())
-
-    X = (
-        df[feature_columns]
-        .apply(pd.to_numeric, errors="coerce")
-        .fillna(0)
-        .clip(lower=0, upper=1)
-        .astype(int)
-    )
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-
-    model = RandomForestClassifier(n_estimators=300, random_state=42, n_jobs=-1)
-    model.fit(X_train, y_train)
-    
-    joblib.dump(model, MODEL_PATH)
-    joblib.dump(encoder, ENCODER_PATH)
-    with open(SYMPTOMS_PATH, "w", encoding="utf-8") as f:
-        json.dump(feature_columns, f)
-
-
 def ensure_model():
     if not (os.path.exists(MODEL_PATH) and os.path.exists(ENCODER_PATH) and os.path.exists(SYMPTOMS_PATH)):
-        train_and_save_model()
+        print("Model or artifacts missing. Training disease prediction model...")
+        train_disease_prediction_model()
 
 ensure_model()
 

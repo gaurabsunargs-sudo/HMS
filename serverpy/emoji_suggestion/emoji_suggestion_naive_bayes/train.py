@@ -11,6 +11,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
+from emoji_suggestion.emoji_config import preprocess_text
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRAIN_DATA_PATH = os.path.join(BASE_DIR, "emoji_suggestion_dataset", "Train.csv")
 MAPPING_PATH = os.path.join(BASE_DIR, "emoji_suggestion_dataset", "Mapping.csv")
@@ -25,16 +27,6 @@ def load_emoji_mapping():
     mapping_df = pd.read_csv(MAPPING_PATH)
     emoji_map = dict(zip(mapping_df['number'], mapping_df['emoticons']))
     return emoji_map
-
-
-def preprocess_text(text):
-    """Preprocess text: lowercase, remove mentions and hashtags"""
-    if pd.isna(text):
-        return ""
-    text = str(text).lower()
-    text = text.replace('@user', '')
-    text = text.replace('#', '')
-    return text.strip()
 
 
 def train_model():

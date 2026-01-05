@@ -77,3 +77,13 @@ def detect_emotion(emoji: str) -> str:
         if emoji in emojis:
             return emotion
     return 'neutral'
+
+
+def preprocess_text(text: str) -> str:
+    """Preprocess text: lowercase, remove mentions and hashtags"""
+    if not text:
+        return ""
+    text = str(text).lower()
+    text = text.replace('@user', '')
+    text = text.replace('#', '')
+    return text.strip()
