@@ -79,11 +79,17 @@ def detect_emotion(emoji: str) -> str:
     return 'neutral'
 
 
+import re
+
 def preprocess_text(text: str) -> str:
-    """Preprocess text: lowercase, remove mentions and hashtags"""
+    """Preprocess text: lowercase, remove mentions, hashtags and extra whitespace"""
     if not text:
         return ""
     text = str(text).lower()
-    text = text.replace('@user', '')
+    # Remove all @mentions
+    text = re.sub(r'@[\w\d_]+', '', text)
+    # Remove hashtags symbol but keep the word
     text = text.replace('#', '')
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text)
     return text.strip()

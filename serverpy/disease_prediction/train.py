@@ -29,11 +29,11 @@ def train_disease_prediction_model():
 
     feature_columns = [c for c in df.columns if c != "prognosis"]
     
-    # Process Labels
+    # Process Labels (disease names to numeric labels)
     label_encoder = LabelEncoder()
     y_encoded = label_encoder.fit_transform(df['prognosis'].astype(str).str.strip())
     
-    # Process Features
+    # Process Features (symptoms to numeric features)
     X = (
         df[feature_columns]
         .apply(pd.to_numeric, errors="coerce")
@@ -46,9 +46,10 @@ def train_disease_prediction_model():
         X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
     )
     
-    # Train Model (300 estimators for better accuracy)
     model = RandomForestClassifier(
-        n_estimators=300,
+        n_estimators=100,
+        max_depth=3,
+        min_samples_split=2,
         random_state=42,
         n_jobs=-1
     )

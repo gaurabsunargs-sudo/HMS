@@ -8,6 +8,13 @@ MODEL_PATH = os.path.join(BASE_DIR, 'model.joblib')
 VECTORIZER_PATH = os.path.join(BASE_DIR, 'vectorizer.joblib')
 LABEL_ENCODER_PATH = os.path.join(BASE_DIR, 'label_mapping.joblib')
 
+import sys
+# Add serverpy directory to sys.path to allow imports from emoji_suggestion
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SERVERPY_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))
+if SERVERPY_DIR not in sys.path:
+    sys.path.append(SERVERPY_DIR)
+
 from emoji_suggestion.emoji_config import preprocess_text
 
 _model = None
