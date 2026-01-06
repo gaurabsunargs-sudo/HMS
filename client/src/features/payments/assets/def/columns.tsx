@@ -124,14 +124,12 @@ export const columns: ColumnDef<Payment>[] = [
       if (!bill) return <div className='max-w-[100px] text-sm'>N/A</div>
 
       // Calculate admission charges
-      const admissionAmount = bill.admission?.totalAmount
-        ? parseFloat(bill.admission.totalAmount)
-        : 0
+      const admissionAmount = Number(bill.admission?.totalAmount || 0)
 
       // Calculate bed charges if admission exists
       let bedCharges = 0
       if (bill.admission && bill.admission.bed) {
-        const pricePerDay = parseFloat(bill.admission.bed.pricePerDay) || 0
+        const pricePerDay = Number(bill.admission.bed.pricePerDay || 0)
         const admissionDate = new Date(bill.admission.admissionDate)
         const dischargeDate = bill.admission.dischargeDate
           ? new Date(bill.admission.dischargeDate)
@@ -139,23 +137,16 @@ export const columns: ColumnDef<Payment>[] = [
 
         const daysDiff = Math.ceil(
           (dischargeDate.getTime() - admissionDate.getTime()) /
-            (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24)
         )
         bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
       }
 
-      // Calculate medical services (bill items)
-      const medicalServices =
-        bill.billItems?.reduce((sum, item) => {
-          return sum + (item.totalPrice || 0)
-        }, 0) || 0
+      // Get consolidated bill amount (already includes all medical service items)
+      const billAmount = Number(bill.totalAmount || 0)
 
-      // Get bill amount
-      const billAmount = parseFloat(bill.totalAmount) || 0
-
-      // Calculate comprehensive total
-      const totalAmount =
-        admissionAmount + bedCharges + medicalServices + billAmount
+      // Calculate comprehensive total: Admission + Bed + Services
+      const totalAmount = admissionAmount + bedCharges + billAmount
 
       return (
         <div className='max-w-[100px] text-sm font-medium'>
@@ -191,14 +182,12 @@ export const columns: ColumnDef<Payment>[] = [
       if (!bill) return <div className='max-w-[100px] text-sm'>N/A</div>
 
       // Calculate admission charges
-      const admissionAmount = bill.admission?.totalAmount
-        ? parseFloat(bill.admission.totalAmount)
-        : 0
+      const admissionAmount = Number(bill.admission?.totalAmount || 0)
 
       // Calculate bed charges if admission exists
       let bedCharges = 0
       if (bill.admission && bill.admission.bed) {
-        const pricePerDay = parseFloat(bill.admission.bed.pricePerDay) || 0
+        const pricePerDay = Number(bill.admission.bed.pricePerDay || 0)
         const admissionDate = new Date(bill.admission.admissionDate)
         const dischargeDate = bill.admission.dischargeDate
           ? new Date(bill.admission.dischargeDate)
@@ -206,23 +195,16 @@ export const columns: ColumnDef<Payment>[] = [
 
         const daysDiff = Math.ceil(
           (dischargeDate.getTime() - admissionDate.getTime()) /
-            (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24)
         )
         bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
       }
 
-      // Calculate medical services (bill items)
-      const medicalServices =
-        bill.billItems?.reduce((sum, item) => {
-          return sum + (item.totalPrice || 0)
-        }, 0) || 0
-
-      // Get bill amount
-      const billAmount = parseFloat(bill.totalAmount) || 0
+      // Get consolidated bill amount (already includes all medical service items)
+      const billAmount = Number(bill.totalAmount || 0)
 
       // Calculate comprehensive total
-      const totalAmount =
-        admissionAmount + bedCharges + medicalServices + billAmount
+      const totalAmount = admissionAmount + bedCharges + billAmount
 
       const totalPaidAmount = (row.original as any).totalPaidAmount
       const remainingAmount = Math.max(0, totalAmount - totalPaidAmount)
@@ -393,15 +375,13 @@ export const columns: ColumnDef<Payment>[] = [
         )
       }
 
-      // Calculate admission charges
-      const admissionAmount = bill.admission?.totalAmount
-        ? parseFloat(bill.admission.totalAmount)
-        : 0
+      // Calculate admission charges (numeric in schema)
+      const admissionAmount = Number(bill.admission?.totalAmount || 0)
 
       // Calculate bed charges if admission exists
       let bedCharges = 0
       if (bill.admission && bill.admission.bed) {
-        const pricePerDay = parseFloat(bill.admission.bed.pricePerDay) || 0
+        const pricePerDay = Number(bill.admission.bed.pricePerDay || 0)
         const admissionDate = new Date(bill.admission.admissionDate)
         const dischargeDate = bill.admission.dischargeDate
           ? new Date(bill.admission.dischargeDate)
@@ -409,23 +389,16 @@ export const columns: ColumnDef<Payment>[] = [
 
         const daysDiff = Math.ceil(
           (dischargeDate.getTime() - admissionDate.getTime()) /
-            (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24)
         )
         bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
       }
 
-      // Calculate medical services (bill items)
-      const medicalServices =
-        bill.billItems?.reduce((sum, item) => {
-          return sum + (item.totalPrice || 0)
-        }, 0) || 0
-
-      // Get bill amount
-      const billAmount = parseFloat(bill.totalAmount) || 0
+      // Get consolidated bill amount (already includes all medical service items)
+      const billAmount = Number(bill.totalAmount || 0)
 
       // Calculate comprehensive total
-      const totalAmount =
-        admissionAmount + bedCharges + medicalServices + billAmount
+      const totalAmount = admissionAmount + bedCharges + billAmount
 
       const totalPaid = ((bill as any).payments || []).reduce(
         (sum: number, p: any) =>
@@ -440,7 +413,7 @@ export const columns: ColumnDef<Payment>[] = [
       let status: string
       let statusConfig: any
 
-      if (remainingAmount === 0) {
+      if (remainingAmount <= 0) {
         status = 'PAID'
         statusConfig = {
           label: 'Paid',

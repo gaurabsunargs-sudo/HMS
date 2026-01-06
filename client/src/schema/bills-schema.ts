@@ -17,8 +17,9 @@ export interface Bill {
   totalAmount: number
   paidAmount: number
   dueDate: string
-  status: 'PENDING' | 'PARTIAL' | 'PAID' | 'OVERDUE'
+  status: 'PENDING' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'CANCELLED'
   billItems: BillItem[]
+  payments?: { amount: number | string }[]
   createdAt: string
   updatedAt: string
   patient: Patient

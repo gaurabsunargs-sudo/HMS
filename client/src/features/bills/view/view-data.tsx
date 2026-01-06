@@ -53,18 +53,13 @@ const ViewData = ({ viewData }: ViewDataProps) => {
 
   // Calculate total amount including all charges
   const calculateTotalAmount = () => {
-    const billTotal = totalAmount || 0
-
     // Add admission charges if available
     const admissionAmount = admission?.totalAmount
       ? parseFloat(admission.totalAmount)
       : 0
 
-    // Add all bill items (medical services)
-    const billItemsTotal =
-      billItems?.reduce((sum, item) => {
-        return sum + (item.totalPrice || 0)
-      }, 0) || 0
+    // The totalAmount from the API already includes all billItems
+    const billTotal = totalAmount || 0
 
     // Calculate bed charges if admission exists
     let bedCharges = 0
@@ -77,14 +72,13 @@ const ViewData = ({ viewData }: ViewDataProps) => {
 
       const daysDiff = Math.ceil(
         (dischargeDate.getTime() - admissionDate.getTime()) /
-          (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
       )
       bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
     }
 
-    // Calculate total from individual components
-    // Add all charges: admission + bed + medical services + bill amount
-    const grandTotal = admissionAmount + bedCharges + billItemsTotal + billTotal
+    // Calculate grand total: Admission + Bed + All Bill Services
+    const grandTotal = admissionAmount + bedCharges + billTotal
 
     return grandTotal
   }
@@ -336,7 +330,7 @@ const ViewData = ({ viewData }: ViewDataProps) => {
                           : new Date()
                         const daysDiff = Math.ceil(
                           (dischargeDate.getTime() - admissionDate.getTime()) /
-                            (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24)
                         )
                         return (pricePerDay * Math.max(1, daysDiff)).toFixed(0)
                       }
@@ -359,7 +353,7 @@ const ViewData = ({ viewData }: ViewDataProps) => {
                             Math.ceil(
                               (dischargeDate.getTime() -
                                 admissionDate.getTime()) /
-                                (1000 * 60 * 60 * 24)
+                              (1000 * 60 * 60 * 24)
                             ) || 1
                           )
                         })()}{' '}
@@ -370,7 +364,7 @@ const ViewData = ({ viewData }: ViewDataProps) => {
                 </div>
               </div>
 
-              {/* Medical Services */}
+              {/* Medical Services & Items */}
               <div className='group relative overflow-hidden rounded-xl border-2 border-indigo-100 bg-white p-6 shadow-lg transition-all duration-300 hover:border-indigo-300 hover:shadow-xl'>
                 <div className='absolute top-0 right-0 h-20 w-20 rounded-bl-full bg-gradient-to-br from-indigo-400 to-indigo-600 opacity-10'></div>
                 <div className='relative z-10'>
@@ -379,40 +373,15 @@ const ViewData = ({ viewData }: ViewDataProps) => {
                       <Package className='h-5 w-5 text-indigo-600' />
                     </div>
                     <p className='text-sm font-semibold text-gray-700'>
-                      Medical Services
+                      Services & Items
                     </p>
                   </div>
                   <p className='mb-2 text-2xl font-bold text-indigo-600'>
-                    Rs.{' '}
-                    {(
-                      billItems?.reduce(
-                        (sum, item) => sum + (item.totalPrice || 0),
-                        0
-                      ) || 0
-                    ).toFixed(0)}
-                  </p>
-                  <p className='text-xs text-gray-500'>
-                    {billItems?.length || 0} service items
-                  </p>
-                </div>
-              </div>
-
-              {/* Original Bill Amount */}
-              <div className='group relative overflow-hidden rounded-xl border-2 border-teal-100 bg-white p-6 shadow-lg transition-all duration-300 hover:border-teal-300 hover:shadow-xl'>
-                <div className='absolute top-0 right-0 h-20 w-20 rounded-bl-full bg-gradient-to-br from-teal-400 to-teal-600 opacity-10'></div>
-                <div className='relative z-10'>
-                  <div className='mb-4 flex items-center'>
-                    <div className='mr-3 rounded-lg bg-teal-100 p-2'>
-                      <Receipt className='h-5 w-5 text-teal-600' />
-                    </div>
-                    <p className='text-sm font-semibold text-gray-700'>
-                      Bill Amount
-                    </p>
-                  </div>
-                  <p className='mb-2 text-2xl font-bold text-teal-600'>
                     Rs. {totalAmount?.toFixed(0) || '0'}
                   </p>
-                  <p className='text-xs text-gray-500'>Original bill total</p>
+                  <p className='text-xs text-gray-500'>
+                    {billItems?.length || 0} items including services
+                  </p>
                 </div>
               </div>
             </div>

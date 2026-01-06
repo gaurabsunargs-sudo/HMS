@@ -185,16 +185,14 @@ export const columns: ColumnDef<Bill>[] = [
       <DataTableColumnHeader column={column} title='Payment Details' />
     ),
     cell: ({ row }) => {
-      // Calculate admission charges
-      const admissionAmount = row.original.admission?.totalAmount
-        ? parseFloat(row.original.admission.totalAmount)
-        : 0
+      // Calculate admission charges (numeric in schema)
+      const admissionAmount = Number(row.original.admission?.totalAmount || 0)
 
       // Calculate bed charges if admission exists
       let bedCharges = 0
       if (row.original.admission && row.original.admission.bed) {
         const pricePerDay =
-          parseFloat(row.original.admission.bed.pricePerDay) || 0
+          Number(row.original.admission.bed.pricePerDay || 0)
         const admissionDate = new Date(row.original.admission.admissionDate)
         const dischargeDate = row.original.admission.dischargeDate
           ? new Date(row.original.admission.dischargeDate)
@@ -202,27 +200,20 @@ export const columns: ColumnDef<Bill>[] = [
 
         const daysDiff = Math.ceil(
           (dischargeDate.getTime() - admissionDate.getTime()) /
-            (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24)
         )
         bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
       }
 
-      // Calculate medical services (bill items)
-      const medicalServices =
-        row.original.billItems?.reduce((sum, item) => {
-          return sum + (item.totalPrice || 0)
-        }, 0) || 0
-
-      // Get bill amount
-      const billAmount = parseFloat(row.original.totalAmount) || 0
+      // Get consolidated bill amount (already includes all medical service items)
+      const billAmount = Number(row.original.totalAmount || 0)
 
       // Calculate comprehensive total
-      const totalAmount =
-        admissionAmount + bedCharges + medicalServices + billAmount
+      const totalAmount = admissionAmount + bedCharges + billAmount
 
       const payments = row.original.payments || []
-      const totalPaid = payments.reduce((sum, payment) => {
-        return sum + (parseFloat(payment.amount) || 0)
+      const totalPaid = payments.reduce((sum: number, payment: any) => {
+        return sum + (Number(payment.amount) || 0)
       }, 0)
       const remaining = totalAmount - totalPaid
 

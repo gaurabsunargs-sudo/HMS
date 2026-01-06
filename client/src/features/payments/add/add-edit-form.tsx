@@ -130,7 +130,13 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
     }
 
     const billItemsTotal = (bill.billItems || []).reduce(
-      (sum: number, item: any) => sum + (item.totalPrice || 0),
+      (sum: number, item: any) => {
+        // Skip items that are bed charges to avoid double counting with dynamic calculation
+        if (item.description?.toLowerCase().includes('bed charge')) {
+          return sum
+        }
+        return sum + (item.totalPrice || 0)
+      },
       0
     )
     const actualTotalAmount = admissionCharge + bedCharge + billItemsTotal
@@ -148,9 +154,11 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
       // Only show bills with remaining dues
       ?.filter((bill: any) => {
         const { actualTotalAmount } = calculateBillCharges(bill)
-
-        const paid = bill.paidAmount || 0
-        return actualTotalAmount - paid > 0
+        const totalPaid = (bill.payments || []).reduce(
+          (sum: number, p: any) => sum + Number(p.amount || 0),
+          0
+        )
+        return actualTotalAmount - totalPaid > 0
       })
       .map((bill: any) => {
         const {
@@ -160,7 +168,11 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
           actualTotalAmount,
         } = calculateBillCharges(bill)
 
-        const remainingAmount = Math.max(0, actualTotalAmount - (bill.paidAmount || 0))
+        const totalPaid = (bill.payments || []).reduce(
+          (sum: number, p: any) => sum + Number(p.amount || 0),
+          0
+        )
+        const remainingAmount = Math.max(0, actualTotalAmount - totalPaid)
 
         const patientName = `${bill.patient?.user?.firstName || 'Unknown'} ${bill.patient?.user?.lastName || 'Patient'}`
 
@@ -171,7 +183,8 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
           admissionCharge,
           bedCharge,
           billItemsTotal,
-          totalAmount: actualTotalAmount, // Use calculated total instead of bill.totalAmount
+          totalAmount: actualTotalAmount,
+          paidAmount: totalPaid,
           remainingAmount,
           patientName,
           admission: bill.admission,
@@ -380,7 +393,8 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
               <h3 className='mb-3 text-lg font-semibold'>
                 Bill Charge Breakdown
               </h3>
-              <div className='grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4'>
+              <div className='grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5'>
+                {/* Existing cards for charges */}
                 {selectedBillOption.admissionCharge > 0 && (
                   <div className='bg-card rounded border p-3'>
                     <p className='text-muted-foreground text-sm'>
@@ -421,15 +435,31 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
                   </div>
                 )}
 
-                <div className='bg-primary/10 rounded border p-3'>
+                <div className='bg-primary/5 rounded border p-3'>
                   <p className='text-muted-foreground text-sm'>Total Amount</p>
                   <p className='text-primary text-lg font-semibold'>
                     Rs {selectedBillOption.totalAmount.toFixed(2)}
                   </p>
-                  <p className='text-muted-foreground text-xs'>
-                    Due: Rs {selectedBillOption.remainingAmount.toFixed(2)}
+                </div>
+
+                <div className='bg-green-50 rounded border p-3'>
+                  <p className='text-muted-foreground text-sm'>Paid Amount</p>
+                  <p className='text-green-600 text-lg font-semibold'>
+                    Rs {selectedBillOption.paidAmount.toFixed(2)}
                   </p>
                 </div>
+
+                {selectedBillOption.remainingAmount > 0 && (
+                  <div className='bg-red-50 border-red-200 rounded border p-3'>
+                    <p className='text-red-600 text-sm font-medium'>Remaining Due</p>
+                    <p className='text-red-700 text-xl font-bold'>
+                      Rs {selectedBillOption.remainingAmount.toFixed(2)}
+                    </p>
+                    <p className='text-red-500 text-xs mt-1 animate-pulse'>
+                      Action Required
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Bill Items Detail */}

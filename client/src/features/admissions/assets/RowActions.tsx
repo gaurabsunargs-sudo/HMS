@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import type { Row } from '@tanstack/react-table'
 import { Eye, PencilLine, Trash2, LogOut } from 'lucide-react'
@@ -60,21 +60,21 @@ export function DataTableRowActions<TData extends { id: string }>({
     return list
       .map((bill: any) => {
         const paid = (bill.payments || []).reduce(
-          (sum: number, p: any) =>
-            sum +
-            (typeof p.amount === 'number'
-              ? p.amount
-              : parseFloat(p.amount || 0)),
+          (sum: number, p: any) => sum + (Number(p.amount) || 0),
           0
         )
+        // Exclude bed charges from bill total if it's a BED bill, as we double count otherwise
+        // Actually, for simple paying, we just want to know how much is left on that specific bill record
         const remaining = Math.max(0, (bill.totalAmount || 0) - paid)
+        const patientName = `${bill.patient?.user?.firstName || ''} ${bill.patient?.user?.lastName || ''}`
         return {
           value: bill.id,
-          label: `Bill #${bill.billNumber} - Due Rs ${remaining}`,
+          label: `Bill #${bill.billNumber} (${patientName}) - Rs ${remaining.toFixed(2)}`,
           remaining,
         }
       })
       .filter((b: any) => b.remaining > 0)
+      .sort((a, b) => b.remaining - a.remaining) // Show largest dues first
   }, [billsData])
 
   const handleDeleteClick = () => {
@@ -102,22 +102,74 @@ export function DataTableRowActions<TData extends { id: string }>({
     }
   }
 
+  // Calculate consolidated values for the Quick Pay modal
+  const consolidated = useMemo(() => {
+    const admission = row.original as any
+    const bills = admission.bills || []
+
+    // 1. Calculate Total Paid
+    const totalPaid = bills.reduce((sum: number, bill: any) => {
+      const billPaid = (bill.payments || []).reduce(
+        (s: number, p: any) => s + (Number(p.amount) || 0),
+        0
+      )
+      return sum + billPaid
+    }, 0)
+
+    // 2. Calculate Grand Total
+    const base = Number(admission.totalAmount || 0)
+    const billsTotal = bills.reduce((sum: number, b: any) => {
+      if (b.billNumber?.startsWith('BED-')) return sum
+      return sum + Number(b.totalAmount || 0)
+    }, 0)
+
+    let bedCharge = 0
+    if (admission.bed?.pricePerDay) {
+      const pricePerDay = parseFloat(String(admission.bed.pricePerDay))
+      const start = new Date(admission.admissionDate).getTime()
+      const end = admission.dischargeDate
+        ? new Date(admission.dischargeDate).getTime()
+        : Date.now()
+      const days = Math.max(1, Math.ceil((end - start) / (24 * 60 * 60 * 1000)))
+      bedCharge = days * pricePerDay
+    }
+
+    const grandTotal = base + billsTotal + bedCharge
+    const remaining = Math.max(0, grandTotal - totalPaid)
+
+    return { totalPaid, grandTotal, remaining }
+  }, [row.original, billsData])
+
+  // Update payment fields when modal opens
+  useEffect(() => {
+    if (isPayModalOpen) {
+      setPayAmount(Number(consolidated.remaining.toFixed(2)))
+      if (billOptions.length > 0) {
+        setPayingBillId(billOptions[0].value)
+      }
+    }
+  }, [isPayModalOpen, consolidated.remaining, billOptions])
+
   const handlePayAndDischarge = async () => {
-    if (!payingBillId || payAmount <= 0) return
+    if (!payingBillId || payAmount <= 0) {
+      toast.error('Please select a bill and enter an amount')
+      return
+    }
     try {
       await createPayment.mutateAsync({
         billId: payingBillId,
         amount: payAmount,
         paymentMethod: 'CASH',
         transactionId: `ADM-DIS-${Date.now()}`,
+        notes: 'Final payment before discharge',
       } as any)
+
       // retry discharge
       await handleDischargeClick()
       setIsPayModalOpen(false)
-      setPayingBillId('')
-      setPayAmount(0)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Payment failed:', err)
+      toast.error(err?.response?.data?.message || 'Payment failed')
     }
   }
   const handleViewClick = () => {

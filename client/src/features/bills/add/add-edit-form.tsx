@@ -59,24 +59,29 @@ const BillForm = ({ bill, isEdit = false }: BillFormProps) => {
       status: 'ADMITTED',
     })
 
-  const patientOptions =
-    admissionsData?.data?.map((admission) => {
-      const patient = admission.patient
-      const firstName = patient?.user?.firstName || ''
-      const lastName = patient?.user?.lastName || ''
-      const fullName =
-        firstName && lastName ? `${firstName} ${lastName}` : 'Unknown Patient'
+  // Build patient dropdown from admissions (ensure unique patients)
+  const patientOptions = Array.from(
+    new Map(
+      admissionsData?.data?.map((admission) => {
+        const patient = admission.patient
+        const firstName = patient?.user?.firstName || ''
+        const lastName = patient?.user?.lastName || ''
+        const fullName =
+          firstName && lastName ? `${firstName} ${lastName}` : 'Unknown Patient'
 
-      return {
-        value: patient.id,
-        label: fullName,
-      }
-    }) || []
+        return [patient.id, { value: patient.id, label: fullName }]
+      }) || []
+    ).values()
+  )
 
-  // Only allow bills for currently admitted patients
+  // Only allow bills for currently admitted patients, filtered by selected patient
   const admissionOptions =
     admissionsData?.data
-      ?.filter((admission) => admission.status === 'ADMITTED')
+      ?.filter(
+        (admission) =>
+          admission.status === 'ADMITTED' &&
+          (!selectedPatientId || admission.patientId === selectedPatientId)
+      )
       .map((admission) => ({
         value: admission.id,
         label: `Admission #${admission.id.slice(0, 8)} - ${new Date(admission.admissionDate).toLocaleDateString()}`,
@@ -139,7 +144,19 @@ const BillForm = ({ bill, isEdit = false }: BillFormProps) => {
     const patientId = String(value)
     setSelectedPatientId(patientId)
     form.setValue('patientId', patientId)
-    form.setValue('admissionId', '')
+
+    // Filter admissions for this patient
+    const patientAdmissions =
+      admissionsData?.data?.filter(
+        (adm) => adm.patientId === patientId && adm.status === 'ADMITTED'
+      ) || []
+
+    // If only one admission, auto-select it
+    if (patientAdmissions.length === 1) {
+      form.setValue('admissionId', patientAdmissions[0].id)
+    } else {
+      form.setValue('admissionId', '')
+    }
   }
 
   const addBillItem = () => {

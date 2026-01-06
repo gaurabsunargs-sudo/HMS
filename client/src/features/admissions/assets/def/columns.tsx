@@ -114,17 +114,20 @@ export const columns: ColumnDef<Admission>[] = [
       const admission = row.original as any
       const base = Number(admission.totalAmount || 0)
       const bills = (admission.bills || []) as any[]
-      const billsTotal = bills.reduce(
-        (sum: number, b: any) => sum + Number(b.totalAmount || 0),
-        0
-      )
+      const billsTotal = bills.reduce((sum: number, b: any) => {
+        // Exclude bed bills from sum as we calculate it dynamically
+        if (b.billNumber?.startsWith('BED-')) return sum
+        return sum + Number(b.totalAmount || 0)
+      }, 0)
 
-      // Dynamic bed charge for current admissions (until now)
+      // Dynamic bed charge for admissions (until now or until discharge)
       let bedCharge = 0
-      if (admission.status === 'ADMITTED' && admission.bed?.pricePerDay) {
+      if (admission.bed?.pricePerDay) {
         const pricePerDay = parseFloat(String(admission.bed.pricePerDay))
         const start = new Date(admission.admissionDate).getTime()
-        const end = Date.now()
+        const end = admission.dischargeDate
+          ? new Date(admission.dischargeDate).getTime()
+          : Date.now()
         const days = Math.max(
           1,
           Math.ceil((end - start) / (24 * 60 * 60 * 1000))
@@ -188,15 +191,17 @@ export const columns: ColumnDef<Admission>[] = [
         return sum + billPaid
       }, 0)
       const base = Number(admission.totalAmount || 0)
-      const billsTotal = bills.reduce(
-        (sum: number, b: any) => sum + Number(b.totalAmount || 0),
-        0
-      )
+      const billsTotal = bills.reduce((sum: number, b: any) => {
+        if (b.billNumber?.startsWith('BED-')) return sum
+        return sum + Number(b.totalAmount || 0)
+      }, 0)
       let bedCharge = 0
-      if (admission.status === 'ADMITTED' && admission.bed?.pricePerDay) {
+      if (admission.bed?.pricePerDay) {
         const pricePerDay = parseFloat(String(admission.bed.pricePerDay))
         const start = new Date(admission.admissionDate).getTime()
-        const end = Date.now()
+        const end = admission.dischargeDate
+          ? new Date(admission.dischargeDate).getTime()
+          : Date.now()
         const days = Math.max(
           1,
           Math.ceil((end - start) / (24 * 60 * 60 * 1000))
