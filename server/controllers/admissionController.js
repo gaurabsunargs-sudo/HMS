@@ -188,20 +188,6 @@ const createAdmission = async (req, res) => {
 
     // Ensure bed is available and mark occupied within a transaction
     const item = await prisma.$transaction(async (tx) => {
-      if (!bedId) {
-        return await tx.Admission.create({
-          data: { patientId, doctorId, bedId, ...rest },
-        });
-      }
-
-      const bed = await tx.Bed.findUnique({ where: { id: bedId } });
-      if (!bed) {
-        throw new Error("Invalid bedId: Bed not found");
-      }
-      if (bed.isOccupied) {
-        throw new Error("Selected bed is already occupied");
-      }
-
       const created = await tx.Admission.create({
         data: {
           patientId,
@@ -212,7 +198,32 @@ const createAdmission = async (req, res) => {
         },
       });
 
-      await tx.Bed.update({ where: { id: bedId }, data: { isOccupied: true } });
+      if (bedId) {
+        await tx.Bed.update({ where: { id: bedId }, data: { isOccupied: true } });
+      }
+
+      // Auto-create Hospital Charge Bill (Rs 50)
+      const billNumber = `HOSP-${created.id.substring(0, 8)}-${Math.floor(1000 + Math.random() * 9000)}`;
+      await tx.Bill.create({
+        data: {
+          patientId: created.patientId,
+          admissionId: created.id,
+          billNumber,
+          totalAmount: 50,
+          dueDate: new Date(),
+          status: "PENDING",
+          billItems: {
+            create: [
+              {
+                description: "Hospital Charge",
+                quantity: 1,
+                unitPrice: 50,
+                totalPrice: 50,
+              },
+            ],
+          },
+        },
+      });
 
       return created;
     });
@@ -364,25 +375,44 @@ const updateAdmission = async (req, res) => {
           });
         }
 
-        // Check unpaid/partial bills for this admission
-        const unpaidBills = await tx.Bill.findMany({
-          where: {
-            admissionId: existing.id,
-            status: { in: ["PENDING", "PARTIAL", "OVERDUE"] },
-          },
+        // Check stay-wide balance for this admission
+        const allAdmissionBills = await tx.Bill.findMany({
+          where: { admissionId: existing.id },
           include: { payments: true },
         });
 
-        if (unpaidBills.length > 0) {
-          const remainingDue = unpaidBills.reduce((sum, bill) => {
-            const paid = bill.payments.reduce(
-              (s, p) => s + parseFloat(p.amount),
-              0
-            );
-            return sum + Math.max(0, parseFloat(bill.totalAmount) - paid);
-          }, 0);
-          throw new Error(`Cannot discharge. Pending payment: ${remainingDue}`);
+        const totalPayments = allAdmissionBills.reduce((sum, bill) => {
+          const billPaid = bill.payments.reduce(
+            (s, p) => s + parseFloat(p.amount || 0),
+            0
+          );
+          return sum + billPaid;
+        }, 0);
+
+        const billsTotal = allAdmissionBills.reduce(
+          (sum, bill) => sum + parseFloat(bill.totalAmount || 0),
+          0
+        );
+
+        // Total = Basic Admission Fee + Sum of all bills (which now includes the Bed bill)
+        const admissionChargeAmount = parseFloat(fullAdmission.totalAmount || 0);
+        const grandTotalDue = admissionChargeAmount + billsTotal;
+        const remainingDue = grandTotalDue - totalPayments;
+
+        if (remainingDue > 0.01) {
+          throw new Error(
+            `Cannot discharge. Pending payment: Rs ${remainingDue.toFixed(2)}`
+          );
         }
+
+        // If cleared, mark all related bills as PAID (optional but good for consistency)
+        await tx.Bill.updateMany({
+          where: {
+            admissionId: existing.id,
+            status: { not: "PAID" },
+          },
+          data: { status: "PAID" },
+        });
 
         await tx.Bed.update({
           where: { id: finalBedId },
@@ -395,7 +425,7 @@ const updateAdmission = async (req, res) => {
 
       const updated = await tx.Admission.update({
         where: { id },
-        data: { patientId, userId, bedId: finalBedId, ...rest },
+        data: { patientId, bedId: finalBedId, ...rest },
       });
 
       return updated;

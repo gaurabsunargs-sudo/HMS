@@ -118,6 +118,8 @@ router.get("/online/users", authenticateToken, async (req, res) => {
       where: {
         id: { not: currentUserId },
         isActive: true,
+        // If a patient is looking for online users, only show doctors
+        ...(req.user.role === "PATIENT" && { role: "DOCTOR" }),
       },
       select: {
         id: true,
@@ -151,6 +153,8 @@ router.get("/chat/users", authenticateToken, async (req, res) => {
     const where = {
       id: { not: currentUserId },
       isActive: true,
+      // If a patient is searching, only show doctors
+      ...(req.user.role === "PATIENT" && { role: "DOCTOR" }),
       ...(search && {
         OR: [
           { firstName: { contains: search, mode: "insensitive" } },

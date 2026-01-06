@@ -143,18 +143,53 @@ const getAllPayments = async (req, res) => {
       prisma.payment.count({ where }),
     ]);
 
-    // Aggregate payments by bill
-    const billMap = new Map();
+    // Aggregate payments by admission (if available) or bill
+    const admissionMap = new Map();
+
+    // To ensure we have correct totals, we need to know all bills for the admissions found
+    const admissionIds = payments
+      .map((p) => p.bill?.admissionId)
+      .filter((id) => id !== null && id !== undefined);
+
+    const relatedBills = await prisma.bill.findMany({
+      where: {
+        admissionId: { in: admissionIds },
+      },
+      include: {
+        billItems: true,
+      },
+    });
 
     payments.forEach((payment) => {
-      const billId = payment.billId;
+      const bill = payment.bill;
+      const key = bill?.admissionId || `BILL_${payment.billId}`;
 
-      if (!billMap.has(billId)) {
-        // Create aggregated bill entry
-        billMap.set(billId, {
-          id: `bill-${billId}`, // Unique ID for the aggregated row
-          billId: billId,
-          bill: payment.bill,
+      if (!admissionMap.has(key)) {
+        // Create aggregated entry
+        const consolidatedBill = { ...bill };
+
+        // If it's an admission, calculate total of ALL related bills
+        if (bill?.admissionId) {
+          const admissionBills = relatedBills.filter(
+            (rb) => rb.admissionId === bill.admissionId
+          );
+          consolidatedBill.totalAmount = admissionBills.reduce(
+            (sum, rb) => {
+              if (rb.billNumber?.startsWith("BED-")) return sum;
+              return sum + parseFloat(rb.totalAmount || 0);
+            },
+            0
+          );
+          // Combine bill items for the admission
+          consolidatedBill.billItems = admissionBills.flatMap(
+            (rb) => rb.billItems || []
+          ).filter(bi => !bi.description?.toLowerCase().includes('bed charge'));
+        }
+
+        admissionMap.set(key, {
+          id: key.startsWith("BILL_") ? key : `adm-${key}`,
+          billId: payment.billId,
+          bill: consolidatedBill,
           payments: [],
           totalPaidAmount: 0,
           latestPayment: payment,
@@ -162,28 +197,28 @@ const getAllPayments = async (req, res) => {
         });
       }
 
-      const billEntry = billMap.get(billId);
-      billEntry.payments.push(payment);
-      billEntry.totalPaidAmount += parseFloat(payment.amount || 0);
-      billEntry.paymentCount += 1;
+      const entry = admissionMap.get(key);
+      entry.payments.push(payment);
+      entry.totalPaidAmount += parseFloat(payment.amount || 0);
+      entry.paymentCount += 1;
 
       // Keep the latest payment for display purposes
       if (
         new Date(payment.createdAt) >
-        new Date(billEntry.latestPayment.createdAt)
+        new Date(entry.latestPayment.createdAt)
       ) {
-        billEntry.latestPayment = payment;
+        entry.latestPayment = payment;
       }
     });
 
-    const aggregatedItems = Array.from(billMap.values());
+    const aggregatedItems = Array.from(admissionMap.values());
 
     res.json(
       formatResponse(true, "Payments retrieved successfully", aggregatedItems, {
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
-          total: aggregatedItems.length, // Use aggregated count
+          total: aggregatedItems.length,
           pages: Math.ceil(aggregatedItems.length / limit),
         },
       })
@@ -438,6 +473,22 @@ const calculateBillTotal = async (billId) => {
 
   if (!bill) return null;
 
+  // If the bill is part of an admission, we must consider ALL bills for that admission
+  let allRelatedBills = [bill];
+  if (bill.admissionId) {
+    const otherBills = await prisma.bill.findMany({
+      where: {
+        admissionId: bill.admissionId,
+        id: { not: bill.id },
+      },
+      include: {
+        payments: true,
+        billItems: true,
+      },
+    });
+    allRelatedBills = [...allRelatedBills, ...otherBills];
+  }
+
   let admissionCharge = 0;
   let bedCharge = 0;
 
@@ -453,25 +504,53 @@ const calculateBillTotal = async (billId) => {
         1,
         Math.ceil(
           (dischargeDate.getTime() - admissionDate.getTime()) /
-            (24 * 60 * 60 * 1000)
+          (24 * 60 * 60 * 1000)
         )
       );
       bedCharge = daysDiff * parseFloat(bill.admission.bed.pricePerDay);
     }
   }
 
-  const billItemsTotal = bill.billItems.reduce(
-    (sum, item) => sum + (item.totalPrice || 0),
+  // Sum up all bill items and bill totals from all related bills
+  const billItemsTotal = allRelatedBills.reduce((sum, rb) => {
+    const itemsSum = (rb.billItems || []).reduce(
+      (s, item) => s + (item.totalPrice || 0),
+      0
+    );
+    return sum + itemsSum;
+  }, 0);
+
+  // We use the sum of all bill.totalAmount as the base for items
+  // (Exclude bed-specific bills to avoid double counting with the dynamic bedCharge calculation)
+  const totalAmountFromBills = allRelatedBills.reduce(
+    (sum, rb) => {
+      if (rb.billNumber && rb.billNumber.startsWith("BED-")) {
+        return sum; // Skip bed bills as they are calculated dynamically below
+      }
+      return sum + parseFloat(rb.totalAmount || 0);
+    },
     0
   );
-  const actualTotalAmount = admissionCharge + bedCharge + billItemsTotal;
+
+  // The actual total for the stay is Admission + Bed + sum of all non-bed Bills
+  const actualTotalAmount = admissionCharge + bedCharge + totalAmountFromBills;
+
+  // Sum up all payments across all related bills
+  const totalPaidAcrossStay = allRelatedBills.reduce((sum, rb) => {
+    const billPaid = (rb.payments || []).reduce(
+      (s, p) => s + parseFloat(p.amount || 0),
+      0
+    );
+    return sum + billPaid;
+  }, 0);
 
   return {
     bill,
     admissionCharge,
     bedCharge,
-    billItemsTotal,
+    billItemsTotal: totalAmountFromBills, // This is what we display as services total
     actualTotalAmount,
+    totalPaidAcrossStay,
   };
 };
 
@@ -510,18 +589,12 @@ const createPayment = async (req, res) => {
       return res.status(404).json(formatResponse(false, "Bill not found"));
     }
 
-    const { bill, actualTotalAmount } = billData;
+    const { bill, actualTotalAmount, totalPaidAcrossStay } = billData;
     const paymentAmount = parseFloat(amount);
 
-    // Calculate current total paid before adding new payment
-    const totalPaidBefore = bill.payments.reduce(
-      (sum, p) => sum + parseFloat(p.amount),
-      0
-    );
+    const remainingAmount = actualTotalAmount - totalPaidAcrossStay;
 
-    const remainingAmount = actualTotalAmount - totalPaidBefore;
-
-    if (paymentAmount > remainingAmount) {
+    if (paymentAmount > remainingAmount + 0.01) { // Added small buffer for decimal precision
       return res
         .status(400)
         .json(
@@ -553,10 +626,10 @@ const createPayment = async (req, res) => {
     });
 
     // Recalculate total paid after this payment
-    const totalPaidAfter = totalPaidBefore + paymentAmount;
+    const totalPaidAfter = totalPaidAcrossStay + paymentAmount;
 
     let newStatus = "PENDING";
-    if (totalPaidAfter >= parseFloat(bill.totalAmount)) {
+    if (totalPaidAfter >= actualTotalAmount - 0.01) {
       newStatus = "PAID";
     } else if (totalPaidAfter > 0) {
       newStatus = "PARTIAL";
@@ -709,12 +782,14 @@ const deletePayment = async (req, res) => {
       (sum, payment) => sum + parseFloat(payment.amount),
       0
     );
-    const billTotal = parseFloat(existingPayment.bill.totalAmount);
+
+    const billData = await calculateBillTotal(existingPayment.billId);
+    const actualTotalAmount = billData ? billData.actualTotalAmount : parseFloat(existingPayment.bill.totalAmount);
 
     let newStatus = "PENDING";
-    if (totalPaid > 0 && totalPaid < billTotal) {
+    if (totalPaid > 0 && totalPaid < actualTotalAmount) {
       newStatus = "PARTIAL";
-    } else if (totalPaid >= billTotal) {
+    } else if (totalPaid >= actualTotalAmount) {
       newStatus = "PAID";
     }
 

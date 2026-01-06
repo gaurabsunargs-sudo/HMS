@@ -15,16 +15,15 @@ const getStats = async (req, res) => {
       const patientId = patient.id;
       const [
         totalAppointments,
-        pendingBillsCount,
+        allBills,
         recentAppointments,
         totalMedicalRecords,
+        activeAdmissions,
       ] = await Promise.all([
         prisma.appointment.count({ where: { patientId } }),
-        prisma.bill.count({
-          where: {
-            patientId,
-            status: { in: ["PENDING", "OVERDUE", "PARTIAL"] },
-          },
+        prisma.bill.findMany({
+          where: { patientId },
+          include: { payments: true },
         }),
         prisma.appointment.findMany({
           where: { patientId },
@@ -39,11 +38,54 @@ const getStats = async (req, res) => {
           },
         }),
         prisma.medicalRecord.count({ where: { patientId } }),
+        prisma.admission.findMany({
+          where: { patientId, status: "ADMITTED" },
+          include: { bed: true },
+        }),
       ]);
+
+      let totalDue = 0;
+      let totalPaid = 0;
+
+      // 1. Calculate Total Payments (from all bills)
+      allBills.forEach((bill) => {
+        const billPaid = bill.payments.reduce(
+          (sum, p) => sum + parseFloat(p.amount || 0),
+          0
+        );
+        totalPaid += billPaid;
+
+        // 2. Add Bill Totals (Exclude BED- bills to avoid double counting)
+        if (!bill.billNumber?.startsWith("BED-")) {
+          totalDue += parseFloat(bill.totalAmount || 0);
+        }
+      });
+
+      // 3. Process All Admissions (for fees and bed charges)
+      const allAdmissions = await prisma.admission.findMany({
+        where: { patientId },
+        include: { bed: true }
+      });
+
+      allAdmissions.forEach((admission) => {
+        // Add basic admission fee (Rs 1200)
+        totalDue += parseFloat(admission.totalAmount || 0);
+
+        // Add bed charge (either until discharge or until now)
+        if (admission.bed) {
+          const start = new Date(admission.admissionDate);
+          const end = admission.dischargeDate ? new Date(admission.dischargeDate) : new Date();
+          const millisPerDay = 24 * 60 * 60 * 1000;
+          const stayDays = Math.max(1, Math.ceil((end - start) / millisPerDay));
+          totalDue += stayDays * parseFloat(admission.bed.pricePerDay || 0);
+        }
+      });
+
+      const pendingAmount = Math.max(0, totalDue - totalPaid);
 
       const data = {
         totalAppointments,
-        pendingBills: pendingBillsCount,
+        pendingBills: pendingAmount,
         recentAppointments,
         totalMedicalRecords,
         totalPatients: 0,

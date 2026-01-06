@@ -87,8 +87,6 @@ const getAllBills = async (req, res) => {
 
     const [items, total] = await prisma.$transaction([
       prisma.bill.findMany({
-        skip: parseInt(skip),
-        take: parseInt(limit),
         orderBy: { createdAt: "desc" },
         where,
         include: {
@@ -116,24 +114,67 @@ const getAllBills = async (req, res) => {
       prisma.bill.count({ where }),
     ]);
 
-    // Format response
-    const formattedItems = items.map((item) => ({
-      ...item,
-      patient: {
-        ...item.patient,
-        name: `${item.patient.user.firstName} ${
-          item.patient.user.middleName || ""
-        } ${item.patient.user.lastName}`.trim(),
-      },
-    }));
+    // Group bills by admissionId to consolidate multiple bills for the same admission
+    const groupedMap = new Map();
+    items.forEach((item) => {
+      const key = item.admissionId || `NO_ADM_${item.patientId}_${item.id}`;
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, {
+          ...item,
+          patient: {
+            ...item.patient,
+            name: `${item.patient.user.firstName} ${item.patient.user.middleName || ""
+              } ${item.patient.user.lastName}`.trim(),
+          },
+          // We'll calculate these
+          billItems: item.billItems.filter(
+            (bi) => !bi.description?.toLowerCase().includes("bed charge")
+          ),
+          payments: [...item.payments],
+          totalAmount: item.billNumber?.startsWith("BED-") ? 0 : parseFloat(item.totalAmount),
+          paidAmount: item.payments.reduce(
+            (sum, p) => sum + parseFloat(p.amount),
+            0
+          ),
+        });
+      } else {
+        const existing = groupedMap.get(key);
+        // Add items to existing
+        // Add items to existing, excluding bed charges to prevent double-counting
+        existing.billItems.push(
+          ...item.billItems.filter(
+            (bi) => !bi.description?.toLowerCase().includes("bed charge")
+          )
+        );
+        existing.payments.push(...item.payments);
+
+        // Exclude BED bills from totalAmount to prevent double counting with dynamic calculation
+        if (!item.billNumber?.startsWith("BED-")) {
+          existing.totalAmount += parseFloat(item.totalAmount);
+        }
+
+        existing.paidAmount = existing.payments.reduce(
+          (sum, p) => sum + parseFloat(p.amount),
+          0
+        );
+        // Keep the latest date/bill number context
+        if (new Date(item.createdAt) > new Date(existing.createdAt)) {
+          existing.billNumber = item.billNumber;
+          existing.createdAt = item.createdAt;
+        }
+      }
+    });
+
+    const finalItems = Array.from(groupedMap.values());
+    const paginatedItems = finalItems.slice(parseInt(skip), parseInt(skip) + parseInt(limit));
 
     res.json(
-      formatResponse(true, "Bills retrieved successfully", formattedItems, {
+      formatResponse(true, "Bills retrieved successfully", paginatedItems, {
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / limit),
+          total: finalItems.length,
+          pages: Math.ceil(finalItems.length / limit),
         },
       })
     );
@@ -174,18 +215,52 @@ const getBillById = async (req, res) => {
       return res.status(404).json(formatResponse(false, "Bill not found"));
     }
 
+    let consolidatedItem = { ...item };
+
+    // If this bill is part of an admission, consolidate all bills for that admission
+    if (item.admissionId) {
+      const relatedBills = await prisma.bill.findMany({
+        where: { admissionId: item.admissionId },
+        include: {
+          billItems: true,
+          payments: true,
+        },
+      });
+
+      if (relatedBills.length > 1) {
+        const allItems = [];
+        const allPayments = [];
+        let totalAmt = 0;
+
+        relatedBills.forEach((rb) => {
+          allItems.push(
+            ...rb.billItems.filter(
+              (bi) => !bi.description?.toLowerCase().includes("bed charge")
+            )
+          );
+          allPayments.push(...rb.payments);
+          if (!rb.billNumber?.startsWith("BED-")) {
+            totalAmt += parseFloat(rb.totalAmount);
+          }
+        });
+
+        consolidatedItem.billItems = allItems;
+        consolidatedItem.payments = allPayments;
+        consolidatedItem.totalAmount = totalAmt;
+      }
+    }
+
     // Format response
     const totalPaid =
-      item.payments?.reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
-    const remaining = parseFloat(item.totalAmount) - totalPaid;
+      consolidatedItem.payments?.reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
+    const remaining = parseFloat(consolidatedItem.totalAmount) - totalPaid;
 
     const formattedItem = {
-      ...item,
+      ...consolidatedItem,
       patient: {
-        ...item.patient,
-        name: `${item.patient.user.firstName} ${
-          item.patient.user.middleName || ""
-        } ${item.patient.user.lastName}`.trim(),
+        ...consolidatedItem.patient,
+        name: `${consolidatedItem.patient.user.firstName} ${consolidatedItem.patient.user.middleName || ""
+          } ${consolidatedItem.patient.user.lastName}`.trim(),
       },
       totalPaid,
       remainingAmount: remaining < 0 ? 0 : remaining,
@@ -284,9 +359,8 @@ const createBill = async (req, res) => {
       ...item,
       patient: {
         ...item.patient,
-        name: `${item.patient.user.firstName} ${
-          item.patient.user.middleName || ""
-        } ${item.patient.user.lastName}`.trim(),
+        name: `${item.patient.user.firstName} ${item.patient.user.middleName || ""
+          } ${item.patient.user.lastName}`.trim(),
       },
     };
 
@@ -390,9 +464,8 @@ const updateBill = async (req, res) => {
       ...item,
       patient: {
         ...item.patient,
-        name: `${item.patient.user.firstName} ${
-          item.patient.user.middleName || ""
-        } ${item.patient.user.lastName}`.trim(),
+        name: `${item.patient.user.firstName} ${item.patient.user.middleName || ""
+          } ${item.patient.user.lastName}`.trim(),
       },
     };
 
@@ -470,9 +543,8 @@ const updateBillStatus = async (req, res) => {
       ...item,
       patient: {
         ...item.patient,
-        name: `${item.patient.user.firstName} ${
-          item.patient.user.middleName || ""
-        } ${item.patient.user.lastName}`.trim(),
+        name: `${item.patient.user.firstName} ${item.patient.user.middleName || ""
+          } ${item.patient.user.lastName}`.trim(),
       },
     };
 
