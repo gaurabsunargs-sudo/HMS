@@ -8,16 +8,18 @@ const ViewPayment = () => {
   const { id } = useParams({
     from: '/dashboard/_authenticated/payments/$id/',
   })
-  const { data: payment, isLoading } = usePaymentById(id)
+  const { data, isLoading } = usePaymentById(id)
+
+  console.log(data)
 
   return (
     <div className='flex flex-col gap-4'>
       <PageHeader
-        title='Edit Payment'
-        description='This page allows you to edit a payment.'
+        title='View Payment'
+        description='This page allows you to view a payment.'
       />
-      {isLoading && !payment && <Spinner />}
-      {payment && <ViewData viewData={payment} />}
+      {isLoading && !data && <Spinner />}
+      {data && <ViewData viewData={data} />}
     </div>
   )
 }

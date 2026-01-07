@@ -240,6 +240,11 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
     const billId = String(value)
     setSelectedBillId(billId)
     form.setValue('billId', billId)
+
+    // Auto-generate transaction ID
+    if (!form.getValues('transactionId')) {
+      form.setValue('transactionId', generateTransactionId())
+    }
   }
 
   const handlePaymentMethodChange = (value: string | number) => {
@@ -253,7 +258,11 @@ const PaymentForm = ({ payment, isEdit = false }: PaymentFormProps) => {
     }
 
     // Auto-generate transaction ID for bank payments
-    if (paymentMethod === 'BANK_TRANSFER' && !payment?.transactionId) {
+    if (
+      paymentMethod === 'BANK_TRANSFER' &&
+      !payment?.transactionId &&
+      !form.getValues('transactionId')
+    ) {
       form.setValue('transactionId', generateTransactionId())
     }
   }
