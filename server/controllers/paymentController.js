@@ -230,15 +230,100 @@ const getAllPayments = async (req, res) => {
 };
 
 // --------------------- GET PAYMENT BY ID ---------------------
+// --------------------- GET PAYMENT BY ID ---------------------
 const getPaymentById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if this is an aggregated bill ID (starts with "bill-")
-    if (id.startsWith("bill-")) {
-      const billId = id.replace("bill-", "");
+    // 1. Handle Aggregated Admission View (adm- prefix)
+    if (id.startsWith("adm-")) {
+      const admissionId = id.replace("adm-", "");
 
-      // Get all payments for this bill and aggregate them
+      // Get all payments linked to this admission (via bills)
+      const payments = await prisma.payment.findMany({
+        where: {
+          bill: { admissionId },
+        },
+        include: {
+          bill: {
+            include: {
+              patient: {
+                include: {
+                  user: {
+                    select: {
+                      id: true,
+                      username: true,
+                      email: true,
+                      firstName: true,
+                      middleName: true,
+                      lastName: true,
+                    },
+                  },
+                },
+              },
+              admission: {
+                include: {
+                  bed: true,
+                },
+              },
+              billItems: true,
+              payments: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (payments.length === 0) {
+        return res
+          .status(404)
+          .json(formatResponse(false, "No payments found for this admission"));
+      }
+
+      // Aggregate payments for the admission
+      // We need to fetch all related bills to accurately calculate totals/items for the consolidated view
+      const relatedBills = await prisma.bill.findMany({
+        where: { admissionId },
+        include: { billItems: true },
+      });
+
+      const firstPayment = payments[0];
+      const consolidatedBill = { ...firstPayment.bill };
+
+      // Calculate total amount for admission (sum of all related bills)
+      consolidatedBill.totalAmount = relatedBills.reduce((sum, rb) => {
+        if (rb.billNumber && rb.billNumber.startsWith("BED-")) return sum;
+        return sum + parseFloat(rb.totalAmount || 0);
+      }, 0);
+
+      // Combine bill items for the admission
+      consolidatedBill.billItems = relatedBills
+        .flatMap((rb) => rb.billItems || [])
+        .filter((bi) => !bi.description?.toLowerCase().includes("bed charge"));
+
+      const aggregatedItem = {
+        id: id,
+        billId: firstPayment.billId, // Representative bill ID
+        bill: consolidatedBill,
+        payments: payments,
+        totalPaidAmount: payments.reduce(
+          (sum, p) => sum + parseFloat(p.amount || 0),
+          0
+        ),
+        latestPayment: firstPayment, // derived from sort desc
+        paymentCount: payments.length,
+      };
+
+      return res.json(
+        formatResponse(true, "Payment retrieved successfully", aggregatedItem)
+      );
+    }
+
+    // 2. Handle Aggregated Bill View (bill- or BILL_ prefix)
+    if (id.startsWith("bill-") || id.startsWith("BILL_")) {
+      const billId = id.replace(/^(bill-|BILL_)/, "");
+
+      // Get all payments for this bill
       const payments = await prisma.payment.findMany({
         where: { billId },
         include: {
@@ -277,83 +362,63 @@ const getPaymentById = async (req, res) => {
           .json(formatResponse(false, "No payments found for this bill"));
       }
 
-      // Aggregate payments by bill (same logic as getAllPayments)
-      const billMap = new Map();
+      // Aggregate payments by bill
+      const firstPayment = payments[0];
+      const aggregatedItem = {
+        id: id,
+        billId: billId,
+        bill: firstPayment.bill,
+        payments: payments,
+        totalPaidAmount: payments.reduce(
+          (sum, p) => sum + parseFloat(p.amount || 0),
+          0
+        ),
+        latestPayment: firstPayment,
+        paymentCount: payments.length,
+      };
 
-      payments.forEach((payment) => {
-        const billId = payment.billId;
-
-        if (!billMap.has(billId)) {
-          // Create aggregated bill entry
-          billMap.set(billId, {
-            id: `bill-${billId}`, // Unique ID for the aggregated row
-            billId: billId,
-            bill: payment.bill,
-            payments: [],
-            totalPaidAmount: 0,
-            latestPayment: payment,
-            paymentCount: 0,
-          });
-        }
-
-        const billEntry = billMap.get(billId);
-        billEntry.payments.push(payment);
-        billEntry.totalPaidAmount += parseFloat(payment.amount || 0);
-        billEntry.paymentCount += 1;
-
-        // Keep the latest payment for display purposes
-        if (
-          new Date(payment.createdAt) >
-          new Date(billEntry.latestPayment.createdAt)
-        ) {
-          billEntry.latestPayment = payment;
-        }
-      });
-
-      const aggregatedItem = Array.from(billMap.values())[0]; // Get the single aggregated item
-
-      res.json(
+      return res.json(
         formatResponse(true, "Payment retrieved successfully", aggregatedItem)
       );
-    } else {
-      // Handle individual payment ID
-      const item = await prisma.payment.findUnique({
-        where: { id },
-        include: {
-          bill: {
-            include: {
-              patient: {
-                include: {
-                  user: {
-                    select: {
-                      id: true,
-                      username: true,
-                      email: true,
-                      firstName: true,
-                      middleName: true,
-                      lastName: true,
-                    },
+    }
+
+    // 3. Handle Individual Payment ID
+    const item = await prisma.payment.findUnique({
+      where: { id },
+      include: {
+        bill: {
+          include: {
+            patient: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    firstName: true,
+                    middleName: true,
+                    lastName: true,
                   },
                 },
               },
-              admission: {
-                include: {
-                  bed: true,
-                },
-              },
-              billItems: true,
-              payments: true,
             },
+            admission: {
+              include: {
+                bed: true,
+              },
+            },
+            billItems: true,
+            payments: true,
           },
         },
-      });
+      },
+    });
 
-      if (!item) {
-        return res.status(404).json(formatResponse(false, "Payment not found"));
-      }
-
-      res.json(formatResponse(true, "Payment retrieved successfully", item));
+    if (!item) {
+      return res.status(404).json(formatResponse(false, "Payment not found"));
     }
+
+    res.json(formatResponse(true, "Payment retrieved successfully", item));
   } catch (error) {
     console.error("Get Payment error:", error);
     const { status, message } = handlePrismaError(error);
