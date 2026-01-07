@@ -32,6 +32,8 @@ export const columns: ColumnDef<Patient>[] = [
         {row?.original?.patientId || '-'}
       </div>
     ),
+    enableHiding: true,
+    initialHidden: true
   },
 
   {

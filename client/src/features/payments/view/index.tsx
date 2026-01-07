@@ -10,7 +10,7 @@ const ViewPayment = () => {
   })
   const { data, isLoading } = usePaymentById(id)
 
-  console.log(data)
+
 
   return (
     <div className='flex flex-col gap-4'>

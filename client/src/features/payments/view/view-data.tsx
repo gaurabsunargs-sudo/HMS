@@ -49,7 +49,6 @@ const ViewData = ({ viewData }: ViewDataProps) => {
     transactionId,
     paymentDate,
     notes,
-    bill,
     // Cash-specific
     receivedBy,
     receiptNo,
@@ -59,6 +58,9 @@ const ViewData = ({ viewData }: ViewDataProps) => {
     authorizationCode,
   } = displayPayment
 
+  // Ensure we use the comprehensive bill data (for aggregated view, this is the consolidated bill)
+  const bill = viewData.bill
+
   // For aggregated data, get additional info
   const totalPaidAmount = isAggregated ? viewData.totalPaidAmount : amount
   const paymentCount = isAggregated ? viewData.paymentCount : 1
@@ -66,17 +68,18 @@ const ViewData = ({ viewData }: ViewDataProps) => {
 
   // Calculate comprehensive total like in bills view
   const calculateComprehensiveTotal = () => {
-    const billTotal = bill?.totalAmount || 0
-
     // Add admission charges if available
     const admissionAmount = bill?.admission?.totalAmount
       ? parseFloat(bill.admission.totalAmount)
       : 0
 
-    // Add all bill items
+    // Add all bill items (filtering out bed charges to avoid double counting)
     const billItemsTotal =
-      bill?.billItems?.reduce((sum, item) => {
-        return sum + (item.totalPrice || 0)
+      bill?.billItems?.reduce((sum: number, item: any) => {
+        if (item.description?.toLowerCase().includes('bed charge')) {
+          return sum
+        }
+        return sum + (Number(item.totalPrice) || 0)
       }, 0) || 0
 
     // Calculate bed charges if admission exists
@@ -90,14 +93,14 @@ const ViewData = ({ viewData }: ViewDataProps) => {
 
       const daysDiff = Math.ceil(
         (dischargeDate.getTime() - admissionDate.getTime()) /
-          (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
       )
       bedCharges = pricePerDay * Math.max(1, daysDiff) // At least 1 day
     }
 
-    // Add all charges: admission + bed + medical services + bill amount
-    const comprehensiveTotal =
-      admissionAmount + bedCharges + billItemsTotal + billTotal
+    // Add all charges: admission + bed + bill items
+    // Removed billTotal to avoid double counting items
+    const comprehensiveTotal = admissionAmount + bedCharges + billItemsTotal
     return comprehensiveTotal
   }
 
@@ -159,33 +162,30 @@ const ViewData = ({ viewData }: ViewDataProps) => {
 
             {/* Payment Status */}
             <div
-              className={`group relative overflow-hidden rounded-2xl p-6 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl ${
-                statusInfo.label === 'Paid'
-                  ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
-                  : statusInfo.label === 'Partial'
-                    ? 'bg-gradient-to-br from-blue-500 to-blue-600'
-                    : 'bg-gradient-to-br from-orange-500 to-orange-600'
-              }`}
+              className={`group relative overflow-hidden rounded-2xl p-6 text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl ${statusInfo.label === 'Paid'
+                ? 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+                : statusInfo.label === 'Partial'
+                  ? 'bg-gradient-to-br from-blue-500 to-blue-600'
+                  : 'bg-gradient-to-br from-orange-500 to-orange-600'
+                }`}
             >
               <div
-                className={`absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${
-                  statusInfo.label === 'Paid'
-                    ? 'bg-gradient-to-br from-emerald-400 to-emerald-700'
-                    : statusInfo.label === 'Partial'
-                      ? 'bg-gradient-to-br from-blue-400 to-blue-700'
-                      : 'bg-gradient-to-br from-orange-400 to-orange-700'
-                }`}
+                className={`absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${statusInfo.label === 'Paid'
+                  ? 'bg-gradient-to-br from-emerald-400 to-emerald-700'
+                  : statusInfo.label === 'Partial'
+                    ? 'bg-gradient-to-br from-blue-400 to-blue-700'
+                    : 'bg-gradient-to-br from-orange-400 to-orange-700'
+                  }`}
               ></div>
               <div className='relative z-10'>
                 <div className='mb-3 flex items-center justify-between'>
                   <p
-                    className={`text-sm font-medium ${
-                      statusInfo.label === 'Paid'
-                        ? 'text-emerald-100'
-                        : statusInfo.label === 'Partial'
-                          ? 'text-blue-100'
-                          : 'text-orange-100'
-                    }`}
+                    className={`text-sm font-medium ${statusInfo.label === 'Paid'
+                      ? 'text-emerald-100'
+                      : statusInfo.label === 'Partial'
+                        ? 'text-blue-100'
+                        : 'text-orange-100'
+                      }`}
                   >
                     Payment Status
                   </p>
@@ -197,13 +197,12 @@ const ViewData = ({ viewData }: ViewDataProps) => {
                 </div>
                 <p className='mb-1 text-2xl font-bold'>{statusInfo.label}</p>
                 <p
-                  className={`text-xs ${
-                    statusInfo.label === 'Paid'
-                      ? 'text-emerald-200'
-                      : statusInfo.label === 'Partial'
-                        ? 'text-blue-200'
-                        : 'text-orange-200'
-                  }`}
+                  className={`text-xs ${statusInfo.label === 'Paid'
+                    ? 'text-emerald-200'
+                    : statusInfo.label === 'Partial'
+                      ? 'text-blue-200'
+                      : 'text-orange-200'
+                    }`}
                 >
                   Bill status
                 </p>
@@ -263,7 +262,7 @@ const ViewData = ({ viewData }: ViewDataProps) => {
               <h5 className='mb-4 text-lg font-semibold text-gray-700'>
                 Charges Breakdown
               </h5>
-              <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
                 {/* Admission Charges */}
                 <div className='rounded-lg border border-purple-200 bg-purple-50 p-3 text-center'>
                   <p className='text-xs font-medium text-gray-600'>Admission</p>
@@ -294,7 +293,7 @@ const ViewData = ({ viewData }: ViewDataProps) => {
                           : new Date()
                         const daysDiff = Math.ceil(
                           (dischargeDate.getTime() - admissionDate.getTime()) /
-                            (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24)
                         )
                         return (pricePerDay * Math.max(1, daysDiff)).toFixed(0)
                       }
@@ -303,29 +302,23 @@ const ViewData = ({ viewData }: ViewDataProps) => {
                   </p>
                 </div>
 
-                {/* Medical Services */}
+                {/* Services & Items */}
                 <div className='rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-center'>
                   <p className='text-xs font-medium text-gray-600'>
-                    Medical Services
+                    Services & Items
                   </p>
                   <p className='text-lg font-bold text-indigo-600'>
                     Rs.{' '}
                     {(
-                      bill?.billItems?.reduce(
-                        (sum, item) => sum + (item.totalPrice || 0),
-                        0
-                      ) || 0
+                      bill?.billItems?.reduce((sum: number, item: any) => {
+                        if (
+                          item.description?.toLowerCase().includes('bed charge')
+                        ) {
+                          return sum
+                        }
+                        return sum + (Number(item.totalPrice) || 0)
+                      }, 0) || 0
                     ).toFixed(0)}
-                  </p>
-                </div>
-
-                {/* Bill Amount */}
-                <div className='rounded-lg border border-teal-200 bg-teal-50 p-3 text-center'>
-                  <p className='text-xs font-medium text-gray-600'>
-                    Bill Amount
-                  </p>
-                  <p className='text-lg font-bold text-teal-600'>
-                    Rs. {bill?.totalAmount?.toFixed(0) || '0'}
                   </p>
                 </div>
               </div>
@@ -343,11 +336,10 @@ const ViewData = ({ viewData }: ViewDataProps) => {
 
             <div className='text-center'>
               <span
-                className={`text-lg font-semibold ${
-                  totalPaidAmount >= comprehensiveTotal
-                    ? 'text-green-600'
-                    : 'text-orange-600'
-                }`}
+                className={`text-lg font-semibold ${totalPaidAmount >= comprehensiveTotal
+                  ? 'text-green-600'
+                  : 'text-orange-600'
+                  }`}
               >
                 {totalPaidAmount >= comprehensiveTotal
                   ? 'Fully Paid'
