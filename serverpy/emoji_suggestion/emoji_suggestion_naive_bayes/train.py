@@ -52,21 +52,21 @@ def train_model():
     y = df['Label'].values
     
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=0.2, random_state=42, stratify=y  #ratio 8:2 (all sample test)
     )
     
     vectorizer = TfidfVectorizer(
         max_features=5000,
         ngram_range=(1, 2),
-        min_df=2,
-        max_df=0.8,
-        sublinear_tf=True
+        min_df=2, #remove rare words
+        max_df=0.8, #remove common words
+        sublinear_tf=True #logarithmic scaling to term frequency so that repeated words contribute less aggressively
     )
     X_train_vec = vectorizer.fit_transform(X_train)
     X_test_vec = vectorizer.transform(X_test)
     
     # MultinomialNB as per documentation
-    model = MultinomialNB(alpha=0.1)
+    model = MultinomialNB(alpha=0.1) #Prevents zero probability for unseen words (1 le large weight dinxa)
     model.fit(X_train_vec, y_train)
     
     y_pred = model.predict(X_test_vec)
